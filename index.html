@@ -192,7 +192,7 @@
                 // --- 4. 地圖功能 ---
                 const openMap = (query) => {
                     // 使用 Naver Map 搜尋 (若在韓國更準)，或改用 Google Maps
-                    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank');
+                    window.open(`https://www.google.com/maps/search/${encodeURIComponent(query)}`, '_blank');
                 };
 
                 // --- 5. 資料: 行程表 ---
