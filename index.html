@@ -13,160 +13,188 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        
+        /* 歡迎頁按鈕特效 */
+        .welcome-btn-shadow {
+            box-shadow: 0 4px 15px rgba(74, 66, 111, 0.5), inset 0 0 10px rgba(251, 230, 195, 0.2);
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-    <div id="app" class="min-h-screen pb-24 relative">
+    <div id="app" class="min-h-screen relative">
         
-        <div v-if="currentTab === 'home'">
-            <header class="relative pt-16 pb-28 px-6 bg-gradient-to-br from-blue-600 to-indigo-800 text-white rounded-b-[3rem] shadow-xl overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-                    <div class="absolute top-10 right-10 text-9xl">🎆</div>
-                    <div class="absolute bottom-10 left-10 text-8xl">🌊</div>
-                </div>
-                <div class="relative z-10 max-w-md mx-auto text-center">
-                    <p class="text-sm opacity-80 tracking-[0.2em] uppercase mb-3">Busan 2026</p>
-                    <h1 class="text-4xl font-extrabold mb-8 tracking-tight drop-shadow-md">釜山花火節<br>慢活奢華旅</h1>
-                    
-                    <div class="inline-flex items-center gap-5 p-5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-inner">
-                        <div class="text-center">
-                            <span class="block text-4xl font-bold font-mono">{{ daysLeft }}</span>
-                            <span class="text-xs opacity-80 uppercase">Days</span>
-                        </div>
-                        <div class="h-10 w-px bg-white/30"></div>
-                        <div class="text-center">
-                            <span class="block text-4xl font-bold font-mono">{{ hoursLeft }}</span>
-                            <span class="text-xs opacity-80 uppercase">Hrs</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+        <div v-if="showWelcomePage" class="fixed inset-0 z-[100] bg-cover bg-center flex flex-col justify-end pb-24 items-center" 
+             style="background-image: url('./welcome.jpg');">
+            
+            <button @click="enterApp" class="bg-[#4A426F] text-[#FBE6C3] px-10 py-3 rounded-full text-lg font-bold border-2 border-[#6B5F9A] flex items-center gap-2 hover:scale-105 transition-transform welcome-btn-shadow">
+                ✨ 開始旅程 ✨
+            </button>
 
-            <div class="max-w-md mx-auto px-6 -mt-16 space-y-4">
-                <div class="bg-white rounded-2xl shadow-lg p-5 flex items-center gap-4">
-                    <div class="bg-orange-100 p-3 rounded-full text-2xl">🌤️</div>
-                    <div>
-                        <h3 class="font-bold text-gray-800">11月天氣</h3>
-                        <p class="text-sm text-gray-500">平均 8-16°C，海邊風大需帶外套。</p>
+        </div>
+
+
+        <div v-else class="pb-24 relative">
+            
+            <div v-if="currentTab === 'home'">
+                <header class="relative pt-16 pb-28 px-6 bg-gradient-to-br from-blue-600 to-indigo-800 text-white rounded-b-[3rem] shadow-xl overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+                        <div class="absolute top-10 right-10 text-9xl">🎆</div>
+                        <div class="absolute bottom-10 left-10 text-8xl">🌊</div>
                     </div>
-                </div>
-                <div class="bg-white rounded-2xl shadow-lg p-5 flex items-center gap-4">
-                    <div class="bg-purple-100 p-3 rounded-full text-2xl">🎆</div>
-                    <div>
-                        <h3 class="font-bold text-gray-800">煙火攻略</h3>
-                        <p class="text-sm text-gray-500">今年在廣安里飯店房內看！</p>
+                    <div class="relative z-10 max-w-md mx-auto text-center">
+                        <p class="text-sm opacity-80 tracking-[0.2em] uppercase mb-3">Busan 2026</p>
+                        <h1 class="text-4xl font-extrabold mb-8 tracking-tight drop-shadow-md">釜山花火節<br>慢活奢華旅</h1>
+                        
+                        <div class="inline-flex items-center gap-5 p-5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-inner">
+                            <div class="text-center">
+                                <span class="block text-4xl font-bold font-mono">{{ daysLeft }}</span>
+                                <span class="text-xs opacity-80 uppercase">Days</span>
+                            </div>
+                            <div class="h-10 w-px bg-white/30"></div>
+                            <div class="text-center">
+                                <span class="block text-4xl font-bold font-mono">{{ hoursLeft }}</span>
+                                <span class="text-xs opacity-80 uppercase">Hrs</span>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="max-w-md mx-auto px-6 -mt-16 space-y-4">
+                    <div class="bg-white rounded-2xl shadow-lg p-5 flex items-center gap-4">
+                        <div class="bg-orange-100 p-3 rounded-full text-2xl">🌤️</div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">11月天氣</h3>
+                            <p class="text-sm text-gray-500">平均 8-16°C，海邊風大需帶外套。</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-lg p-5 flex items-center gap-4">
+                        <div class="bg-purple-100 p-3 rounded-full text-2xl">🎆</div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">煙火攻略</h3>
+                            <p class="text-sm text-gray-500">今年在廣安里飯店房內看！</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div v-if="currentTab === 'schedule'" class="pt-10 px-4 max-w-md mx-auto">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800 pl-2 border-l-4 border-blue-500">行程總覽</h2>
-            
-            <div v-for="day in itinerary" :key="day.day" class="mb-10">
-                <div class="sticky top-0 bg-gray-50/95 backdrop-blur z-20 py-2 mb-4 flex items-center justify-between border-b border-gray-100">
-                    <div>
-                        <span class="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">Day {{ day.day }}</span>
-                        <span class="ml-2 font-bold text-gray-700">{{ day.date }}</span>
+            <div v-if="currentTab === 'schedule'" class="pt-10 px-4 max-w-md mx-auto">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800 pl-2 border-l-4 border-blue-500">行程總覽</h2>
+                
+                <div v-for="day in itinerary" :key="day.day" class="mb-10">
+                    <div class="sticky top-0 bg-gray-50/95 backdrop-blur z-20 py-2 mb-4 flex items-center justify-between border-b border-gray-100">
+                        <div>
+                            <span class="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">Day {{ day.day }}</span>
+                            <span class="ml-2 font-bold text-gray-700">{{ day.date }}</span>
+                        </div>
+                        <span class="text-xs text-gray-400">{{ day.title }}</span>
                     </div>
-                    <span class="text-xs text-gray-400">{{ day.title }}</span>
-                </div>
 
-                <div class="ml-3 pl-6 border-l-2 border-gray-200 space-y-6">
-                    <div v-for="(event, idx) in day.events" :key="idx" class="relative">
-                        <div :class="`absolute -left-[31px] w-4 h-4 rounded-full border-2 border-white shadow ${event.isImportant ? 'bg-amber-400 ring-4 ring-amber-100' : 'bg-blue-400'}`"></div>
-                        
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <div class="flex gap-3">
-                                <span class="text-2xl">{{ event.icon }}</span>
-                                <div class="w-full">
-                                    <h4 class="font-bold text-gray-800 text-base">{{ event.title }}</h4>
-                                    <p class="text-xs text-blue-500 font-mono mb-1">{{ event.time }}</p>
-                                    <p class="text-sm text-gray-500 leading-relaxed">{{ event.desc }}</p>
-                                    <button @click="openMap(event.mapQuery)" class="mt-3 text-xs flex items-center justify-end w-full gap-1 text-gray-400 hover:text-blue-600">
-                                        <span>📍 導航</span>
-                                    </button>
+                    <div class="ml-3 pl-6 border-l-2 border-gray-200 space-y-6">
+                        <div v-for="(event, idx) in day.events" :key="idx" class="relative">
+                            <div :class="`absolute -left-[31px] w-4 h-4 rounded-full border-2 border-white shadow ${event.isImportant ? 'bg-amber-400 ring-4 ring-amber-100' : 'bg-blue-400'}`"></div>
+                            
+                            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                <div class="flex gap-3">
+                                    <span class="text-2xl">{{ event.icon }}</span>
+                                    <div class="w-full">
+                                        <h4 class="font-bold text-gray-800 text-base">{{ event.title }}</h4>
+                                        <p class="text-xs text-blue-500 font-mono mb-1">{{ event.time }}</p>
+                                        <p class="text-sm text-gray-500 leading-relaxed">{{ event.desc }}</p>
+                                        <button @click="openMap(event.mapQuery)" class="mt-3 text-xs flex items-center justify-end w-full gap-1 text-gray-400 hover:text-green-600 transition-colors">
+                                            <span class="font-bold text-green-500">N</span>
+                                            <span>Naver 導航</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div v-if="currentTab === 'tools'" class="pt-10 px-4 max-w-md mx-auto space-y-8">
-            <section>
-                <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><span>💱</span> 匯率試算</h2>
-                <div class="bg-white p-6 rounded-2xl shadow-lg border border-blue-50">
-                    <div class="flex items-center gap-4 mb-4">
-                        <div class="flex-1">
-                            <label class="block text-xs text-gray-500 mb-1">韓幣 (KRW)</label>
-                            <input v-model="krwInput" type="number" placeholder="輸入" class="w-full text-xl font-bold border-b-2 border-gray-200 focus:border-blue-500 outline-none py-1 bg-transparent">
-                        </div>
-                        <div class="text-2xl text-gray-300">→</div>
-                        <div class="flex-1 text-right">
-                            <label class="block text-xs text-gray-500 mb-1">台幣 (TWD)</label>
-                            <div class="text-xl font-bold text-blue-600 py-1">${{ twdResult }}</div>
-                        </div>
-                    </div>
-                    <p class="text-xs text-center text-gray-400">匯率設定: 1 KRW ≈ {{ currencyRate }} TWD</p>
-                </div>
-            </section>
-
-            <section>
-                <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><span>📝</span> 行前清單</h2>
-                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                    <ul class="divide-y divide-gray-100">
-                        <li v-for="item in packingList" :key="item.id" class="flex items-center p-4 hover:bg-gray-50 transition-colors cursor-pointer" @click="item.done = !item.done">
-                            <div :class="`w-5 h-5 rounded border flex items-center justify-center ${item.done ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`">
-                                <span v-if="item.done" class="text-white text-xs">✓</span>
+            <div v-if="currentTab === 'tools'" class="pt-10 px-4 max-w-md mx-auto space-y-8">
+                <section>
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><span>💱</span> 匯率試算</h2>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg border border-blue-50">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-500 mb-1">韓幣 (KRW)</label>
+                                <input v-model="krwInput" type="number" placeholder="輸入" class="w-full text-xl font-bold border-b-2 border-gray-200 focus:border-blue-500 outline-none py-1 bg-transparent">
                             </div>
-                            <span :class="`ml-3 text-sm font-medium ${item.done ? 'text-gray-400 line-through' : 'text-gray-700'}`">{{ item.text }}</span>
-                        </li>
-                    </ul>
-                </div>
-            </section>
-
-            <section class="pb-10">
-                <div class="bg-red-50 border border-red-100 rounded-xl p-4">
-                    <h3 class="text-red-800 font-bold mb-2 text-sm">🆘 緊急聯絡</h3>
-                    <div class="text-xs text-red-700 space-y-1">
-                        <p>👮 報警: 112 / 🚑 救護: 119</p>
-                        <p>📞 外交部釜山辦事處: +82-51-663-2400</p>
+                            <div class="text-2xl text-gray-300">→</div>
+                            <div class="flex-1 text-right">
+                                <label class="block text-xs text-gray-500 mb-1">台幣 (TWD)</label>
+                                <div class="text-xl font-bold text-blue-600 py-1">${{ twdResult }}</div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-center text-gray-400">匯率設定: 1 KRW ≈ {{ currencyRate }} TWD</p>
                     </div>
-                </div>
-            </section>
-        </div>
+                </section>
 
-        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 pb-safe">
-            <div class="flex justify-around items-center max-w-md mx-auto">
-                <button @click="currentTab = 'home'" :class="`flex flex-col items-center space-y-1 ${currentTab === 'home' ? 'text-blue-600' : 'text-gray-400'}`">
-                    <span class="text-xl">🏠</span>
-                    <span class="text-xs font-medium">首頁</span>
-                </button>
-                <button @click="currentTab = 'schedule'" :class="`flex flex-col items-center space-y-1 ${currentTab === 'schedule' ? 'text-blue-600' : 'text-gray-400'}`">
-                    <span class="text-xl">📅</span>
-                    <span class="text-xs font-medium">行程</span>
-                </button>
-                <button @click="currentTab = 'tools'" :class="`flex flex-col items-center space-y-1 ${currentTab === 'tools' ? 'text-blue-600' : 'text-gray-400'}`">
-                    <span class="text-xl">🧳</span>
-                    <span class="text-xs font-medium">工具</span>
-                </button>
+                <section>
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><span>📝</span> 行前清單</h2>
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <ul class="divide-y divide-gray-100">
+                            <li v-for="item in packingList" :key="item.id" class="flex items-center p-4 hover:bg-gray-50 transition-colors cursor-pointer" @click="item.done = !item.done">
+                                <div :class="`w-5 h-5 rounded border flex items-center justify-center ${item.done ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`">
+                                    <span v-if="item.done" class="text-white text-xs">✓</span>
+                                </div>
+                                <span :class="`ml-3 text-sm font-medium ${item.done ? 'text-gray-400 line-through' : 'text-gray-700'}`">{{ item.text }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section class="pb-10">
+                    <div class="bg-red-50 border border-red-100 rounded-xl p-4">
+                        <h3 class="text-red-800 font-bold mb-2 text-sm">🆘 緊急聯絡</h3>
+                        <div class="text-xs text-red-700 space-y-1">
+                            <p>👮 報警: 112 / 🚑 救護: 119</p>
+                            <p>📞 外交部釜山辦事處: +82-51-663-2400</p>
+                        </div>
+                    </div>
+                </section>
             </div>
-        </nav>
 
-    </div>
+            <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 pb-safe">
+                <div class="flex justify-around items-center max-w-md mx-auto">
+                    <button @click="currentTab = 'home'" :class="`flex flex-col items-center space-y-1 ${currentTab === 'home' ? 'text-blue-600' : 'text-gray-400'}`">
+                        <span class="text-xl">🏠</span>
+                        <span class="text-xs font-medium">首頁</span>
+                    </button>
+                    <button @click="currentTab = 'schedule'" :class="`flex flex-col items-center space-y-1 ${currentTab === 'schedule' ? 'text-blue-600' : 'text-gray-400'}`">
+                        <span class="text-xl">📅</span>
+                        <span class="text-xs font-medium">行程</span>
+                    </button>
+                    <button @click="currentTab = 'tools'" :class="`flex flex-col items-center space-y-1 ${currentTab === 'tools' ? 'text-blue-600' : 'text-gray-400'}`">
+                        <span class="text-xl">🧳</span>
+                        <span class="text-xs font-medium">工具</span>
+                    </button>
+                </div>
+            </nav>
+
+        </div> </div>
 
     <script>
         const { createApp, ref, computed, onMounted } = Vue;
 
         createApp({
             setup() {
+                // --- 🆕 歡迎頁面控制開關 ---
+                // 預設為 true (顯示歡迎頁)，點擊按鈕後變 false
+                const showWelcomePage = ref(true);
+
+                // 進入 App 的動作
+                const enterApp = () => {
+                    showWelcomePage.value = false;
+                    // 這裡可以加入音效或是紀錄使用者已看過，目前先簡單切換
+                };
+
                 // --- 1. 核心設定 ---
                 const currentTab = ref('home');
                 const startDate = "2026-11-13T14:30:00"; // 出發日
-                const currencyRate = 0.024; // 匯率
+                const currencyRate = 0.024; // 匯率 (1 KRW = 0.024 TWD)
 
                 // --- 2. 倒數計時邏輯 ---
                 const daysLeft = ref(0);
@@ -189,10 +217,11 @@
                     return Math.round(krwInput.value * currencyRate);
                 });
 
-                // --- 4. 地圖功能 ---
+                // --- 🆕 4. 地圖功能 (改成 Naver Map) ---
                 const openMap = (query) => {
-                    // 使用 Naver Map 搜尋 (若在韓國更準)，或改用 Google Maps
-                    window.open(`https://www.google.com/maps/search/${encodeURIComponent(query)}`, '_blank');
+                    // 使用 Naver Map 手機版網頁搜尋
+                    // 如果是在韓國當地，手機有安裝 Naver Map App 的話，通常會自動喚醒 App
+                    window.open(`https://m.map.naver.com/search2/search.naver?query=${encodeURIComponent(query)}`, '_blank');
                 };
 
                 // --- 5. 資料: 行程表 ---
@@ -200,45 +229,45 @@
                     {
                         day: 1, date: "11/13 (五)", title: "抵達與海濱散策",
                         events: [
-                            { time: "14:30", icon: "✈️", title: "金海機場抵達", desc: "領取 WOWPASS，搭計程車直奔廣安里", mapQuery: "Gimhae International Airport" },
-                            { time: "16:00", icon: "🏨", title: "飯店 Check-in", desc: "入住廣安里海景第一排，確認煙火視野", isImportant: true, mapQuery: "Gwangalli Beach" },
-                            { time: "18:00", icon: "🐚", title: "海邊晚餐", desc: "廣安里烤貝類或味贊王鹽烤肉", mapQuery: "Gwangalli Food Street" },
-                            { time: "20:00", icon: "🚁", title: "無人機秀 (Drone Show)", desc: "週五特別場，海灘散步消化", mapQuery: "Gwangalli Beach" }
+                            { time: "14:30", icon: "✈️", title: "金海機場抵達", desc: "領取 WOWPASS，搭計程車直奔廣安里", mapQuery: "김해국제공항" }, // 改為韓文關鍵字更準
+                            { time: "16:00", icon: "🏨", title: "飯店 Check-in", desc: "入住廣安里海景第一排，確認煙火視野", isImportant: true, mapQuery: "광안리해수욕장" },
+                            { time: "18:00", icon: "🐚", title: "海邊晚餐", desc: "廣安里烤貝類或味贊王鹽烤肉", mapQuery: "광안리 맛집" },
+                            { time: "20:00", icon: "🚁", title: "無人機秀 (Drone Show)", desc: "週五特別場，海灘散步消化", mapQuery: "광안리해수욕장" }
                         ]
                     },
                     {
                         day: 2, date: "11/14 (六)", title: "膠囊列車與煙火盛宴",
                         events: [
-                            { time: "10:30", icon: "🥐", title: "海景早午餐", desc: "睡到自然醒，Little Aus 或海景咖啡廳", mapQuery: "Gwangalli Brunch" },
-                            { time: "13:00", icon: "🚋", title: "天空膠囊列車", desc: "海雲台 Blue Line Park (尾浦出發)", mapQuery: "Blue Line Park Mipo Station" },
-                            { time: "15:30", icon: "🏠", title: "返回飯店備戰", desc: "避開交通管制，回房準備炸雞香檳", isImportant: true, mapQuery: "Gwangalli Beach" },
-                            { time: "20:00", icon: "🎆", title: "釜山國際煙火節", desc: "房內落地窗全景觀賞，免吹風免人擠人", mapQuery: "Gwangan Bridge" }
+                            { time: "10:30", icon: "🥐", title: "海景早午餐", desc: "睡到自然醒，Little Aus 或海景咖啡廳", mapQuery: "광안리 브런치" },
+                            { time: "13:00", icon: "🚋", title: "天空膠囊列車", desc: "海雲台 Blue Line Park (尾浦出發)", mapQuery: "해운대블루라인파크 미포정거장" },
+                            { time: "15:30", icon: "🏠", title: "返回飯店備戰", desc: "避開交通管制，回房準備炸雞香檳", isImportant: true, mapQuery: "광안리해수욕장" },
+                            { time: "20:00", icon: "🎆", title: "釜山國際煙火節", desc: "房內落地窗全景觀賞，免吹風免人擠人", mapQuery: "광안대교" }
                         ]
                     },
                     {
                         day: 3, date: "11/15 (日)", title: "千年古都慶州巡禮",
                         events: [
-                            { time: "11:00", icon: "🚕", title: "退房 & 包車出發", desc: "前往慶州 (行李隨車，晚上住西面)", mapQuery: "Gyeongju" },
-                            { time: "12:30", icon: "🍜", title: "皇理團路", desc: "韓屋午餐 & 逛文創小店", mapQuery: "Hwangnidan-gil" },
-                            { time: "15:30", icon: "🌲", title: "大陵苑", desc: "天塚馬與巨大古墳群打卡", mapQuery: "Daereungwon Tomb Complex" },
-                            { time: "17:30", icon: "🌙", title: "東宮與月池", desc: "欣賞絕美古宮夜景", mapQuery: "Donggung Palace and Wolji Pond" },
-                            { time: "20:00", icon: "🏨", title: "入住西面飯店", desc: "西面站附近，交通樞紐", mapQuery: "Seomyeon Station" }
+                            { time: "11:00", icon: "🚕", title: "退房 & 包車出發", desc: "前往慶州 (行李隨車，晚上住西面)", mapQuery: "경주" },
+                            { time: "12:30", icon: "🍜", title: "皇理團路", desc: "韓屋午餐 & 逛文創小店", mapQuery: "황리단길" },
+                            { time: "15:30", icon: "🌲", title: "大陵苑", desc: "天塚馬與巨大古墳群打卡", mapQuery: "대릉원" },
+                            { time: "17:30", icon: "🌙", title: "東宮與月池", desc: "欣賞絕美古宮夜景", mapQuery: "동궁과 월지" },
+                            { time: "20:00", icon: "🏨", title: "入住西面飯店", desc: "西面站附近，交通樞紐", mapQuery: "서면역" }
                         ]
                     },
                     {
                         day: 4, date: "11/16 (一)", title: "文化體驗與購物",
                         events: [
-                            { time: "10:30", icon: "🛌", title: "悠閒起床", desc: "西面地下街稍微逛逛", mapQuery: "Seomyeon Underground Shopping Center" },
-                            { time: "11:30", icon: "👘", title: "甘川洞文化村", desc: "韓服體驗，尋找小王子", mapQuery: "Gamcheon Culture Village" },
-                            { time: "15:00", icon: "🛍️", title: "南浦洞商圈", desc: "BIFF廣場糖餅、樂天百貨水舞秀", mapQuery: "BIFF Square" },
-                            { time: "18:00", icon: "🛒", title: "樂天超市 (Lotte Mart)", desc: "南浦洞店採買零食伴手禮", mapQuery: "Lotte Mart Gwangbok" }
+                            { time: "10:30", icon: "🛌", title: "悠閒起床", desc: "西面地下街稍微逛逛", mapQuery: "서면지하도상가" },
+                            { time: "11:30", icon: "👘", title: "甘川洞文化村", desc: "韓服體驗，尋找小王子", mapQuery: "감천문화마을" },
+                            { time: "15:00", icon: "🛍️", title: "南浦洞商圈", desc: "BIFF廣場糖餅、樂天百貨水舞秀", mapQuery: "BIFF광장" },
+                            { time: "18:00", icon: "🛒", title: "樂天超市 (Lotte Mart)", desc: "南浦洞店採買零食伴手禮", mapQuery: "롯데마트 광복점" }
                         ]
                     },
                     {
                         day: 5, date: "11/17 (二)", title: "滿載而歸",
                         events: [
-                            { time: "10:00", icon: "🚕", title: "前往機場", desc: "搭乘計程車 (約30-40分)", mapQuery: "Gimhae International Airport" },
-                            { time: "11:00", icon: "💄", title: "金海機場免稅店", desc: "最後補貨 (美妝/人蔘/菸酒)", mapQuery: "Gimhae International Airport Duty Free" },
+                            { time: "10:00", icon: "🚕", title: "前往機場", desc: "搭乘計程車 (約30-40分)", mapQuery: "김해국제공항" },
+                            { time: "11:00", icon: "💄", title: "金海機場免稅店", desc: "最後補貨 (美妝/人蔘/菸酒)", mapQuery: "김해국제공항 면세점" },
                             { time: "14:00", icon: "🛫", title: "飛機起飛", desc: "回溫暖的家", mapQuery: "" }
                         ]
                     }
@@ -260,7 +289,9 @@
                     setInterval(calculateCountdown, 60000); // 每分更新
                 });
 
+                // 回傳給 HTML 使用的變數與函式
                 return {
+                    showWelcomePage, enterApp, // 新增的
                     currentTab,
                     daysLeft, hoursLeft,
                     itinerary, packingList,
