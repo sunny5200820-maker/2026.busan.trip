@@ -12,18 +12,19 @@
         /* --- 核心樣式設定 (深色主題) --- */
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
-            /* 進入主程式後的背景：釜山廣安大橋夜景 (Unsplash 高清圖) */
+            /* 背景圖：釜山廣安大橋夜景 (高清) */
             background-image: url('https://images.unsplash.com/photo-1569174962811-871856230750?q=80&w=1974&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
             color: #e2e8f0; 
         }
-        /* 背景深色遮罩 */
+        
+        /* [修正] 背景遮罩調整為 0.6 (原本0.85太黑)，讓夜景更清楚 */
         body::before {
             content: ''; position: fixed; inset: 0; 
-            background: rgba(15, 23, 42, 0.85); /* 深藍黑色濾鏡 */
-            backdrop-filter: blur(4px); 
+            background: rgba(15, 23, 42, 0.6); 
+            backdrop-filter: blur(3px); 
             z-index: -1;
         }
         
@@ -33,23 +34,23 @@
 
         /* --- 玻璃擬態卡片 (Dark Glass) --- */
         .glass-card { 
-            background-color: rgba(30, 41, 59, 0.75); 
+            background-color: rgba(30, 41, 59, 0.6); 
             backdrop-filter: blur(12px); 
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
         }
         /* 覆蓋原本的白色背景為深色玻璃 */
-        .bg-white { background-color: rgba(30, 41, 59, 0.75) !important; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1) !important; }
+        .bg-white { background-color: rgba(30, 41, 59, 0.6) !important; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.15) !important; }
         .card-shadow { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
 
         /* 輸入框優化 */
-        .input-clean { background: rgba(0,0,0,0.3) !important; border: 1px solid rgba(255,255,255,0.1); outline: none; padding: 10px 12px; border-radius: 10px; width: 100%; font-size: 14px; color: white; }
+        .input-clean { background: rgba(0,0,0,0.3) !important; border: 1px solid rgba(255,255,255,0.2); outline: none; padding: 10px 12px; border-radius: 10px; width: 100%; font-size: 14px; color: white; }
         .input-clean:focus { border-color: #c084fc; background: rgba(0,0,0,0.5) !important; }
 
         /* 導航列 */
-        .glass-nav { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.1); }
+        .glass-nav { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.1); }
         
         /* 漸層與動畫 */
-        .theme-gradient { background: linear-gradient(135deg, rgba(79, 70, 229, 0.9) 0%, rgba(147, 51, 234, 0.9) 50%, rgba(219, 39, 119, 0.9) 100%); }
+        .theme-gradient { background: linear-gradient(135deg, rgba(79, 70, 229, 0.85) 0%, rgba(147, 51, 234, 0.85) 50%, rgba(219, 39, 119, 0.85) 100%); }
         .floating-home-btn { box-shadow: 0 10px 25px -5px rgba(147, 51, 234, 0.6); transform: translateY(-24px); }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -65,13 +66,19 @@
              style="background-image: url('./welcome.jpg');">
              
              <div class="absolute bottom-10 w-full text-center animate-bounce">
-                <span class="text-white/80 text-sm font-light tracking-widest bg-black/30 px-4 py-1 rounded-full backdrop-blur-sm">點擊螢幕開始旅程</span>
+                <span class="text-white/90 text-sm font-light tracking-widest bg-black/40 px-6 py-2 rounded-full backdrop-blur-sm border border-white/20 shadow-lg">
+                    ✨ 點擊螢幕開始旅程 ✨
+                </span>
              </div>
         </div>
 
         <div v-else class="animate-fade-up">
             
             <header class="theme-gradient text-white pt-14 pb-12 px-6 rounded-b-[2.5rem] shadow-lg relative overflow-hidden mb-[-2rem]">
+                <button @click="backToWelcome" class="absolute top-6 left-6 z-20 text-white/70 hover:text-white transition-colors p-2 bg-white/10 rounded-full backdrop-blur-sm">
+                    <i class="ri-arrow-left-s-line text-xl"></i>
+                </button>
+
                 <div class="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
                     <div class="absolute top-10 right-10 text-6xl animate-pulse">✨</div>
                     <div class="absolute bottom-10 left-10 text-4xl">🎆</div>
@@ -294,6 +301,9 @@
                                 <button @click="deleteItem(idx)" class="text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"><i class="ri-close-circle-fill text-lg"></i></button>
                             </div>
                         </div>
+                        <div v-if="currentList.length === 0" class="text-center text-white/30 text-xs py-4">
+                            尚未新增項目
+                        </div>
                     </div>
                 </div>
 
@@ -472,6 +482,7 @@
                 const deleteItem = (index) => currentList.value.splice(index, 1);
 
                 const enterApp = () => showWelcomePage.value = false;
+                const backToWelcome = () => showWelcomePage.value = true;
                 const openMap = (query) => window.open(`https://m.map.naver.com/search2/search.naver?query=${encodeURIComponent(query)}`, '_blank');
                 
                 const fetchWeather = async () => {
@@ -497,7 +508,7 @@
                 });
 
                 return {
-                    showWelcomePage, enterApp, currentTab, tripStatus,
+                    showWelcomePage, enterApp, backToWelcome, currentTab, tripStatus,
                     daysLeft, hoursLeft, targetDate, editDate,
                     prepList, addPrep, deletePrep, newPrepItem,
                     currentWeather,
