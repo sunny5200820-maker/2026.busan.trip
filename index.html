@@ -3,415 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 Busan Trip</title>
+    <title>2026 釜山國際煙火節</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #f8fafc;
-        }
-        /* 浪漫標題字體 */
-        .font-romantic {
-            font-family: 'Great Vibes', cursive;
-        }
-        
-        /* 煙火背景動畫 (模擬 GIF 效果) */
-        .fireworks-bg {
-            background-color: #0f172a; /* 深藍夜空 */
-            background-image: 
-                radial-gradient(circle at 50% 50%, rgba(255, 200, 200, 0.1) 0%, transparent 20%),
-                url('https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?q=80&w=2073&auto=format&fit=crop'); /* 煙火底圖 */
-            background-size: cover;
-            background-position: center;
-            background-blend-mode: screen;
-            animation: bg-pulse 10s infinite alternate;
-        }
-
-        @keyframes bg-pulse {
-            0% { filter: brightness(1); }
-            100% { filter: brightness(1.2); }
-        }
-
-        /* 輸入框去背樣式 */
-        .input-ghost {
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid rgba(255,255,255,0.5);
-            color: white;
-            text-align: center;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-        .input-ghost:focus {
-            border-bottom: 1px solid white;
-        }
-        
-        /* 隱藏捲軸但可滾動 */
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        /* 隱藏滾動條但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body>
-    <div id="app" class="relative min-h-screen flex flex-col">
+<body class="bg-gray-100 text-gray-800">
+
+<div id="app" class="max-w-md mx-auto bg-white min-h-screen shadow-xl relative pb-20 sm:max-w-2xl sm:my-8 sm:min-h-[800px] sm:rounded-xl overflow-hidden">
+
+    <div v-if="currentView === 'welcome'" class="h-screen sm:h-[800px] flex flex-col justify-center items-center bg-slate-800 text-white p-6 relative">
+        <div class="absolute inset-0 overflow-hidden opacity-30">
+            <i class="fa-solid fa-fireworks text-9xl absolute top-10 right-10 text-yellow-500 animate-pulse"></i>
+            <i class="fa-solid fa-fireworks text-8xl absolute bottom-20 left-10 text-pink-500 animate-pulse" style="animation-delay: 0.5s"></i>
+        </div>
         
-        <div class="fixed bottom-6 right-6 z-50 flex gap-3">
-            <button @click="triggerImport" class="bg-gray-800 hover:bg-gray-700 text-white p-4 rounded-full shadow-lg transition-all transform hover:scale-105 tooltip" title="匯入行程">
-                <i class="fas fa-file-import fa-lg"></i>
-            </button>
-            <button @click="exportData" class="bg-indigo-600 hover:bg-indigo-500 text-white p-4 rounded-full shadow-lg transition-all transform hover:scale-105 tooltip" title="匯出行程">
-                <i class="fas fa-file-export fa-lg"></i>
-            </button>
-            <input type="file" ref="fileInput" class="hidden" accept=".json" @change="handleFileUpload">
-        </div>
-
-        <nav v-if="currentPage !== 'welcome'" class="bg-white shadow-sm sticky top-0 z-40">
-            <div class="max-w-md mx-auto px-4">
-                <div class="flex justify-between h-14 items-center text-sm font-medium text-gray-500">
-                    <button @click="currentPage = 'home'" :class="{'text-indigo-600 border-b-2 border-indigo-600': currentPage === 'home'}" class="h-full px-2">首頁</button>
-                    <button @click="currentPage = 'itinerary'" :class="{'text-indigo-600 border-b-2 border-indigo-600': currentPage === 'itinerary'}" class="h-full px-2">行程表</button>
-                    <button @click="currentPage = 'todos'" :class="{'text-indigo-600 border-b-2 border-indigo-600': currentPage === 'todos'}" class="h-full px-2">待辦事項</button>
-                    <button @click="currentPage = 'welcome'" class="h-full px-2 text-gray-400"><i class="fas fa-cog"></i></button>
-                </div>
-            </div>
-        </nav>
-
-        <div v-if="currentPage === 'welcome'" class="flex-grow flex flex-col items-center justify-center text-white fireworks-bg relative overflow-hidden">
-            <div class="absolute inset-0 pointer-events-none opacity-30">
-                 </div>
-
-            <div class="z-10 text-center px-6 animate-fade-in-up">
-                <p class="text-xl tracking-widest uppercase mb-2 text-indigo-200">Our Next Adventure</p>
-                <h1 class="text-7xl mb-4 font-romantic text-shadow shadow-indigo-900/50">2026 Busan Trip</h1>
-                <p class="text-lg text-gray-300 font-light mb-12">Fireworks, Ocean, and Unforgettable Memories.</p>
-
-                <div class="grid grid-cols-4 gap-4 mb-12 max-w-sm mx-auto">
-                    <div v-for="(value, label) in countdown" :key="label" class="bg-white/10 backdrop-blur-md rounded-lg p-3">
-                        <div class="text-3xl font-bold">{{ value }}</div>
-                        <div class="text-xs uppercase opacity-75">{{ label }}</div>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-center gap-4 text-xl mb-12">
-                    <input v-model="userSettings.userName" class="input-ghost w-24" placeholder="Your Name">
-                    <span class="font-romantic text-3xl">&</span>
-                    <input v-model="userSettings.partnerName" class="input-ghost w-24" placeholder="Partner">
-                </div>
-
-                <button @click="currentPage = 'home'" class="bg-white text-indigo-900 px-8 py-3 rounded-full font-semibold hover:bg-indigo-50 transition shadow-lg flex items-center gap-2 mx-auto">
-                    Start Planning <i class="fas fa-arrow-right"></i>
-                </button>
-            </div>
-        </div>
-
-        <div v-if="currentPage === 'home'" class="max-w-md mx-auto w-full p-4 space-y-6 pb-24">
-            <header class="bg-indigo-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-                <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4">
-                    <i class="fas fa-plane fa-8x"></i>
-                </div>
-                <h2 class="text-2xl font-bold mb-1">Hi, {{ userSettings.userName }}!</h2>
-                <p class="opacity-90">距離釜山之旅還有 {{ countdown.days }} 天</p>
-                <div class="mt-4 flex gap-2">
-                    <span class="px-3 py-1 bg-white/20 rounded-full text-xs backdrop-blur-sm">2026.03.27 出發</span>
-                    <span class="px-3 py-1 bg-white/20 rounded-full text-xs backdrop-blur-sm">8 天 7 夜</span>
-                </div>
-            </header>
-
-            <section class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="font-bold text-gray-800"><i class="fas fa-cloud-sun text-yellow-500 mr-2"></i>釜山氣候預測</h3>
-                    <span class="text-xs text-gray-400">歷史均溫參考</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="text-4xl">🌤️</div>
-                        <div>
-                            <div class="text-2xl font-bold text-gray-800">14°C</div>
-                            <div class="text-xs text-gray-500">早晚偏涼 / 舒適</div>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-sm font-medium text-indigo-600 mb-1">穿搭建議</div>
-                        <p class="text-xs text-gray-600 max-w-[140px] leading-tight">
-                            推薦風衣外套搭配薄長袖。晚上海邊風大，建議攜帶圍巾。
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <section>
-                <div class="flex justify-between items-center mb-3 px-1">
-                    <h3 class="font-bold text-gray-800">待辦事項 ({{ pendingTodos }} remaining)</h3>
-                    <button @click="currentPage = 'todos'" class="text-indigo-600 text-sm">查看全部</button>
-                </div>
-                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3">
-                    <div v-for="todo in priorityTodos" :key="todo.id" class="flex items-center gap-3">
-                        <div @click="toggleTodo(todo.id)" 
-                             class="w-5 h-5 rounded-full border-2 flex items-center justify-center cursor-pointer transition-colors"
-                             :class="todo.completed ? 'bg-green-500 border-green-500' : 'border-gray-300'">
-                            <i v-if="todo.completed" class="fas fa-check text-white text-xs"></i>
-                        </div>
-                        <span :class="{'line-through text-gray-400': todo.completed}" class="text-sm text-gray-700">{{ todo.text }}</span>
-                    </div>
-                </div>
-            </section>
-
-            <div class="grid grid-cols-2 gap-4">
-                <button @click="currentPage = 'itinerary'" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition">
-                    <div class="w-10 h-10 rounded-full bg-pink-100 text-pink-500 flex items-center justify-center"><i class="fas fa-map-marked-alt"></i></div>
-                    <span class="font-medium text-gray-700">詳細行程</span>
-                </button>
-                <button class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition">
-                    <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center"><i class="fas fa-wallet"></i></div>
-                    <span class="font-medium text-gray-700">預算管理</span>
-                </button>
-            </div>
-        </div>
-
-        <div v-if="currentPage === 'itinerary'" class="max-w-md mx-auto w-full p-4 pb-24">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">My Itinerary</h2>
+        <div class="z-10 text-center space-y-6">
+            <div class="w-20 h-1 bg-yellow-400 mx-auto mb-4"></div>
+            <h1 class="text-3xl font-bold tracking-widest leading-relaxed">2026<br>釜山國際煙火節</h1>
+            <p class="text-gray-300 tracking-wide text-sm">Busan International Fireworks Festival</p>
             
-            <div class="space-y-6">
-                <div v-for="(day, index) in itinerary" :key="index" class="relative pl-6 border-l-2 border-indigo-100">
-                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-indigo-500 ring-4 ring-white"></div>
-                    
-                    <div class="mb-2 flex items-baseline gap-2">
-                        <h3 class="font-bold text-lg text-gray-800">Day {{ index + 1 }}</h3>
-                        <span class="text-sm text-gray-500">{{ day.date }}</span>
-                        <span class="ml-auto text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">{{ day.theme }}</span>
+            <button @click="currentView = 'itinerary'" 
+                class="mt-12 px-8 py-3 border border-white rounded-full hover:bg-white hover:text-slate-900 transition duration-300">
+                ENTER <i class="fa-solid fa-chevron-right ml-2 text-xs"></i>
+            </button>
+        </div>
+        
+        <div class="absolute bottom-8 text-xs text-gray-500">Designed by You</div>
+    </div>
+
+    <div v-else class="h-full">
+        
+        <div class="bg-white px-6 py-4 border-b border-gray-100 sticky top-0 z-10 flex justify-between items-center">
+            <h2 class="font-bold text-lg text-slate-800">
+                {{ pageTitle }}
+            </h2>
+            <button @click="currentView = 'welcome'" class="text-gray-400 hover:text-gray-600">
+                <i class="fa-solid fa-house"></i>
+            </button>
+        </div>
+
+        <div class="p-4 pb-24">
+            
+            <div v-if="currentView === 'itinerary'">
+                <div class="flex overflow-x-auto space-x-2 mb-4 pb-2 no-scrollbar">
+                    <button v-for="(day, index) in itinerary" :key="index"
+                        @click="activeDay = index"
+                        :class="['px-4 py-2 rounded-lg whitespace-nowrap text-sm font-medium transition-colors', 
+                        activeDay === index ? 'bg-slate-800 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200']">
+                        Day {{ index + 1 }}
+                    </button>
+                </div>
+
+                <div class="space-y-4 animate-fade-in">
+                    <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500 mb-4">
+                        <h3 class="font-bold text-blue-800">{{ itinerary[activeDay].theme }}</h3>
+                        <p class="text-xs text-blue-600 mt-1">{{ itinerary[activeDay].dateDesc }}</p>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-4">
-                        <div v-for="(spot, sIndex) in day.spots" :key="sIndex" class="flex gap-3">
-                            <div class="text-xs font-bold text-gray-400 w-10 pt-1">{{ spot.time }}</div>
-                            <div class="flex-1">
-                                <div class="font-medium text-gray-800">{{ spot.name }}</div>
-                                <div class="text-xs text-gray-500 mt-1 flex gap-2">
-                                    <span v-if="spot.tag" class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{{ spot.tag }}</span>
-                                    <span v-if="spot.note" class="text-orange-500"><i class="fas fa-exclamation-circle"></i> {{ spot.note }}</span>
-                                </div>
+                    <div v-for="(item, idx) in itinerary[activeDay].events" :key="idx" class="flex gap-4 relative">
+                        <div class="flex flex-col items-center w-12 flex-shrink-0">
+                            <span class="text-xs font-mono font-bold text-gray-500">{{ item.time }}</span>
+                            <div class="w-0.5 h-full bg-gray-200 my-1 relative">
+                                <div class="absolute top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 rounded-full" 
+                                     :class="item.highlight ? 'bg-pink-500' : 'bg-gray-400'"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1 bg-white p-3 rounded-lg shadow-sm border border-gray-100 mb-2">
+                            <h4 class="font-bold text-gray-800" :class="{'text-pink-600': item.highlight}">
+                                {{ item.title }}
+                            </h4>
+                            <div class="text-sm text-gray-600 mt-1 leading-relaxed whitespace-pre-line">
+                                {{ item.desc }}
+                            </div>
+                            <div v-if="item.note" class="mt-2 text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                                <i class="fa-solid fa-circle-info mr-1"></i> {{ item.note }}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div v-if="currentPage === 'todos'" class="max-w-md mx-auto w-full p-4 pb-24">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">To-Do List</h2>
-            
-            <div class="space-y-2">
-                <div v-for="todo in todos" :key="todo.id" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                         <div @click="toggleTodo(todo.id)" 
-                             class="w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition-colors"
-                             :class="todo.completed ? 'bg-indigo-500 border-indigo-500' : 'border-gray-300'">
-                            <i v-if="todo.completed" class="fas fa-check text-white text-xs"></i>
+            <div v-if="currentView === 'packing'">
+                <div class="mb-4 flex items-center gap-2">
+                    <input v-model="packingTitle" class="text-xl font-bold bg-transparent border-b border-dashed border-gray-300 focus:border-blue-500 outline-none w-full py-1" placeholder="點擊修改標題">
+                    <i class="fa-solid fa-pen text-gray-300 text-xs"></i>
+                </div>
+                
+                <div v-for="(group, gIdx) in packingList" :key="gIdx" class="mb-6">
+                    <h3 class="font-bold text-gray-700 mb-2 flex items-center">
+                        <i :class="group.icon" class="mr-2 text-slate-500"></i> {{ group.category }}
+                    </h3>
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                        <div v-for="(item, iIdx) in group.items" :key="iIdx" 
+                             @click="item.checked = !item.checked"
+                             class="p-3 border-b border-gray-50 last:border-0 flex items-center cursor-pointer hover:bg-gray-50">
+                            <div :class="['w-5 h-5 rounded border mr-3 flex items-center justify-center transition-colors', 
+                                item.checked ? 'bg-green-500 border-green-500' : 'border-gray-300']">
+                                <i v-if="item.checked" class="fa-solid fa-check text-white text-xs"></i>
+                            </div>
+                            <span :class="['text-sm transition-colors', item.checked ? 'text-gray-400 line-through' : 'text-gray-700']">
+                                {{ item.name }}
+                            </span>
                         </div>
-                        <span :class="{'line-through text-gray-400': todo.completed}" class="text-gray-700">{{ todo.text }}</span>
                     </div>
-                    <button @click="removeTodo(todo.id)" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
 
-            <div class="mt-6 flex gap-2">
-                <input v-model="newTodoText" @keyup.enter="addTodo" placeholder="新增待辦事項..." class="flex-1 p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <button @click="addTodo" class="bg-indigo-600 text-white px-4 rounded-xl font-bold"><i class="fas fa-plus"></i></button>
-            </div>
-        </div>
+            <div v-if="currentView === 'ledger'">
+                <div class="mb-4 flex items-center gap-2">
+                    <input v-model="ledgerTitle" class="text-xl font-bold bg-transparent border-b border-dashed border-gray-300 focus:border-blue-500 outline-none w-full py-1" placeholder="點擊修改標題">
+                    <i class="fa-solid fa-pen text-gray-300 text-xs"></i>
+                </div>
 
+                <div class="bg-gradient-to-r from-slate-700 to-slate-800 rounded-xl p-5 text-white shadow-lg mb-6">
+                    <p class="text-xs opacity-70">總支出 (KRW)</p>
+                    <p class="text-3xl font-mono font-bold mt-1">₩ {{ totalCost.toLocaleString() }}</p>
+                </div>
+
+                <div class="flex gap-2 mb-4">
+                    <input v-model="newCostName" placeholder="項目" class="flex-1 p-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-slate-500">
+                    <input v-model.number="newCostPrice" type="number" placeholder="金額" class="w-24 p-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-slate-500">
+                    <button @click="addCost" class="bg-slate-800 text-white px-4 rounded-lg">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100">
+                    <div v-for="(record, idx) in ledgerData" :key="idx" class="p-3 border-b border-gray-50 last:border-0 flex justify-between items-center">
+                        <span class="text-sm text-gray-700">{{ record.name }}</span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-mono font-bold">₩ {{ record.price.toLocaleString() }}</span>
+                            <button @click="ledgerData.splice(idx, 1)" class="text-gray-300 hover:text-red-500">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div v-if="ledgerData.length === 0" class="p-4 text-center text-sm text-gray-400">
+                        暫無紀錄
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <script>
-        const { createApp, ref, computed, onMounted } = Vue;
+    <nav v-if="currentView !== 'welcome'" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-50 sm:absolute sm:rounded-b-xl">
+        <div class="grid grid-cols-3 h-16 max-w-md mx-auto sm:max-w-none">
+            <button @click="currentView = 'itinerary'" 
+                :class="['flex flex-col items-center justify-center space-y-1', currentView === 'itinerary' ? 'text-slate-800' : 'text-gray-400']">
+                <i class="fa-regular fa-calendar-check text-xl"></i>
+                <span class="text-xs">行程</span>
+            </button>
+            <button @click="currentView = 'packing'" 
+                :class="['flex flex-col items-center justify-center space-y-1', currentView === 'packing' ? 'text-slate-800' : 'text-gray-400']">
+                <i class="fa-solid fa-suitcase text-xl"></i>
+                <span class="text-xs">清單</span>
+            </button>
+            <button @click="currentView = 'ledger'" 
+                :class="['flex flex-col items-center justify-center space-y-1', currentView === 'ledger' ? 'text-slate-800' : 'text-gray-400']">
+                <i class="fa-solid fa-won-sign text-xl"></i>
+                <span class="text-xs">記帳</span>
+            </button>
+        </div>
+    </nav>
 
-        createApp({
-            setup() {
-                const currentPage = ref('welcome');
-                const newTodoText = ref('');
-                
-                // 使用者設定
-                const userSettings = ref({
-                    userName: 'User',
-                    partnerName: 'Partner',
-                    tripDate: '2026-03-27'
-                });
+</div>
 
-                // 待辦事項資料
-                const todos = ref([
-                    { id: 1, text: '預訂機票', completed: true },
-                    { id: 2, text: '預訂廣安里海景飯店', completed: false },
-                    { id: 3, text: '購買釜山通行證 (Visit Busan Pass)', completed: false },
-                    { id: 4, text: '查詢花火節觀賞席位', completed: false },
-                    { id: 5, text: '兌換韓幣', completed: false },
-                ]);
+<script>
+    const { createApp, ref, computed } = Vue;
 
-                // 行程資料 (已補全部分)
-                const itinerary = ref([
-                    {
-                        date: '3/27 (Fri)',
-                        theme: '抵達釜山',
-                        spots: [
-                            { time: '14:00', name: '金海機場 (PUS) 抵達', tag: '交通' },
-                            { time: '16:00', name: '飯店 Check-in (廣安里)', tag: '住宿', note: '確認海景房' },
-                            { time: '18:00', name: '廣安里海灘散步', tag: '景點' },
-                            { time: '19:30', name: '烤腸一條街晚餐', tag: '美食' }
-                        ]
-                    },
-                    {
-                        date: '3/28 (Sat)',
-                        theme: '海岸列車與膠囊',
-                        spots: [
-                            { time: '10:00', name: '海雲台藍線公園', tag: '景點', note: '需提前預約膠囊列車' },
-                            { time: '12:30', name: '尾浦家海鮮鍋', tag: '美食' },
-                            { time: '15:00', name: 'X the Sky 觀景台', tag: '景點' },
-                            { time: '19:00', name: '海雲台傳統市場', tag: '逛街' }
-                        ]
-                    },
-                    {
-                        date: '3/29 (Sun)',
-                        theme: '文化村與南浦洞',
-                        spots: [
-                            { time: '09:30', name: '甘川洞文化村', tag: '拍照' },
-                            { time: '13:00', name: 'BIFF 廣場吃糖餅', tag: '美食' },
-                            { time: '15:00', name: '影島大橋開橋儀式', tag: '表演' },
-                            { time: '18:00', name: '樂天超市採買', tag: '購物' }
-                        ]
-                    },
-                    {
-                        date: '3/30 (Mon)',
-                        theme: '機張松葉蟹',
-                        spots: [
-                            { time: '11:00', name: '機張市場吃松葉蟹', tag: '美食' },
-                            { time: '14:00', name: '海東龍宮寺', tag: '景點' },
-                            { time: '16:30', name: 'Lotte Outlet', tag: '購物' },
-                            { time: '20:00', name: '西面地下街', tag: '逛街' }
-                        ]
-                    },
-                    {
-                        date: '3/31 (Tue)',
-                        theme: 'SPA 與放鬆',
-                        spots: [
-                            { time: '10:00', name: '新世界百貨 Spa Land', tag: '體驗' },
-                            { time: '14:00', name: '廣安里咖啡廳看海', tag: '放鬆' },
-                            { time: '18:00', name: '民樂水邊公園', tag: '野餐' }
-                        ]
-                    }
-                ]);
+    createApp({
+        setup() {
+            const currentView = ref('welcome');
+            const activeDay = ref(0);
+            
+            // 可編輯標題
+            const packingTitle = ref('個人行李清單');
+            const ledgerTitle = ref('個人記帳本');
 
-                // 倒數計時邏輯
-                const countdown = computed(() => {
-                    const target = new Date(userSettings.value.tripDate);
-                    const now = new Date();
-                    const diff = target - now;
-                    
-                    if (diff < 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+            // 行程資料 (釜山)
+            const itinerary = ref([
+                {
+                    theme: "抵達 & 海邊散步",
+                    dateDesc: "Day 1 (週五)",
+                    events: [
+                        { time: "14:30", title: "抵達金海機場 (PUS)", desc: "搭計程車直奔廣安里。", note: "建議計程車" },
+                        { time: "16:00", title: "飯店 Check-in", desc: "確認房間視野，買好零食飲料。", highlight: true },
+                        { time: "18:00", title: "廣安里晚餐", desc: "烤貝類或韓式烤肉，欣賞廣安大橋夜景。" },
+                        { time: "20:00", title: "無人機秀", desc: "週六有正式表演，週五可能有預熱，或單純享受海風。" }
+                    ]
+                },
+                {
+                    theme: "膠囊列車 & 煙火",
+                    dateDesc: "Day 2 (週六) 煙火節當日",
+                    events: [
+                        { time: "10:30", title: "早午餐", desc: "廣安里知名早午餐 (Little Aus 或海景咖啡)。" },
+                        { time: "13:00", title: "海雲台藍線公園", desc: "搭計程車至尾浦站。\n體驗天空膠囊列車 (Sky Capsule)。", note: "需預約" },
+                        { time: "15:30", title: "返回飯店", desc: "避開管制人潮，回房間叫外送炸雞、準備香檳。", highlight: true },
+                        { time: "20:00", title: "釜山國際煙火節", desc: "在落地窗前舒適看煙火。", highlight: true },
+                        { time: "21:30", title: "休息", desc: "避開散場人潮，在房內休息。" }
+                    ]
+                },
+                {
+                    theme: "慶州古都一日遊",
+                    dateDesc: "Day 3 (週日)",
+                    events: [
+                        { time: "11:00", title: "退房 & 移動", desc: "寄放行李或包車出發。" },
+                        { time: "12:30", title: "抵達慶州", desc: "建議包車一日遊，省去轉車疲勞。" },
+                        { time: "13:30", title: "皇理團路", desc: "韓屋文青街區午餐、逛街。" },
+                        { time: "15:30", title: "大陵苑", desc: "皇陵古墳群散步。" },
+                        { time: "17:00", title: "東宮與月池", desc: "欣賞古宮夜景。", highlight: true },
+                        { time: "20:00", title: "返回釜山西面", desc: "晚餐：味贊王鹽烤肉或豬肉湯飯。" }
+                    ]
+                },
+                {
+                    theme: "甘川洞 & 採買",
+                    dateDesc: "Day 4 (週一)",
+                    events: [
+                        { time: "10:30", title: "前往甘川洞", desc: "週一遊客較少。" },
+                        { time: "11:30", title: "文化村 + 韓服", desc: "與小王子合照，慢慢走拍。" },
+                        { time: "14:30", title: "南浦洞", desc: "BIFF 廣場黑糖餅、光復路逛街、樂天百貨水舞秀。" },
+                        { time: "18:00", title: "樂天超市", desc: "採買伴手禮，搭計程車回飯店打包。" }
+                    ]
+                },
+                {
+                    theme: "返家",
+                    dateDesc: "Day 5 (週二)",
+                    events: [
+                        { time: "10:00", title: "前往機場", desc: "從西面搭計程車約 30 分鐘。" },
+                        { time: "11:00", title: "機場免稅店", desc: "領取免稅品 (美妝、菸酒、正官庄)。" },
+                        { time: "13:00", title: "飛機起飛", desc: "回家。" }
+                    ]
+                }
+            ]);
 
-                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            // 行李資料
+            const packingList = ref([
+                { category: "證件與錢", icon: "fa-solid fa-passport", items: [
+                    { name: "護照", checked: false },
+                    { name: "網卡/Wifi", checked: false },
+                    { name: "現金/WOW Pass", checked: false }
+                ]},
+                { category: "衣物", icon: "fa-solid fa-shirt", items: [
+                    { name: "換洗衣物", checked: false },
+                    { name: "睡衣/睡袍", checked: false },
+                    { name: "好走的鞋", checked: false }
+                ]},
+                { category: "電子產品", icon: "fa-solid fa-bolt", items: [
+                    { name: "轉接頭 (韓國圓孔)", checked: false },
+                    { name: "充電線/行充", checked: false }
+                ]}
+            ]);
 
-                    return { days, hours, minutes, seconds };
-                });
+            // 記帳資料
+            const ledgerData = ref([
+                { name: "機場巴士", price: 18000 },
+                { name: "便利商店", price: 5600 }
+            ]);
+            const newCostName = ref('');
+            const newCostPrice = ref(null);
 
-                const priorityTodos = computed(() => {
-                    return todos.value.filter(t => !t.completed).slice(0, 3);
-                });
+            const addCost = () => {
+                if(newCostName.value && newCostPrice.value) {
+                    ledgerData.value.push({ name: newCostName.value, price: newCostPrice.value });
+                    newCostName.value = '';
+                    newCostPrice.value = null;
+                }
+            };
 
-                const pendingTodos = computed(() => {
-                    return todos.value.filter(t => !t.completed).length;
-                });
+            const totalCost = computed(() => {
+                return ledgerData.value.reduce((sum, item) => sum + item.price, 0);
+            });
 
-                // Methods
-                const toggleTodo = (id) => {
-                    const t = todos.value.find(x => x.id === id);
-                    if (t) t.completed = !t.completed;
-                };
+            // 標題顯示邏輯
+            const pageTitle = computed(() => {
+                if (currentView.value === 'itinerary') return '2026 釜山國際煙火節';
+                if (currentView.value === 'packing') return '行李清單';
+                if (currentView.value === 'ledger') return '旅費記帳';
+                return '';
+            });
 
-                const addTodo = () => {
-                    if (!newTodoText.value.trim()) return;
-                    todos.value.push({
-                        id: Date.now(),
-                        text: newTodoText.value,
-                        completed: false
-                    });
-                    newTodoText.value = '';
-                };
-
-                const removeTodo = (id) => {
-                    todos.value = todos.value.filter(t => t.id !== id);
-                };
-
-                // 匯出功能
-                const exportData = () => {
-                    const data = {
-                        userSettings: userSettings.value,
-                        todos: todos.value,
-                        itinerary: itinerary.value
-                    };
-                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'busan_trip_data.json';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    alert('行程資料已匯出！請妥善保存。');
-                };
-
-                // 匯入功能
-                const fileInput = ref(null);
-                const triggerImport = () => {
-                    fileInput.value.click();
-                };
-
-                const handleFileUpload = (event) => {
-                    const file = event.target.files[0];
-                    if (!file) return;
-                    
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const data = JSON.parse(e.target.result);
-                            if (data.userSettings) userSettings.value = data.userSettings;
-                            if (data.todos) todos.value = data.todos;
-                            if (data.itinerary) itinerary.value = data.itinerary;
-                            alert('資料匯入成功！');
-                        } catch (err) {
-                            alert('匯入失敗：檔案格式錯誤');
-                        }
-                    };
-                    reader.readAsText(file);
-                };
-
-                return {
-                    currentPage,
-                    userSettings,
-                    todos,
-                    itinerary,
-                    countdown,
-                    priorityTodos,
-                    pendingTodos,
-                    toggleTodo,
-                    newTodoText,
-                    addTodo,
-                    removeTodo,
-                    exportData,
-                    triggerImport,
-                    handleFileUpload,
-                    fileInput
-                };
-            }
-        }).mount('#app');
-    </script>
+            return {
+                currentView,
+                activeDay,
+                itinerary,
+                packingList,
+                ledgerData,
+                newCostName,
+                newCostPrice,
+                addCost,
+                totalCost,
+                pageTitle,
+                packingTitle,
+                ledgerTitle
+            };
+        }
+    }).mount('#app');
+</script>
 </body>
 </html>
