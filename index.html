@@ -7,7 +7,7 @@
     
     <script>
         window.onerror = function(msg, url, lineNo, columnNo, error) {
-            alert("發生錯誤：" + msg);
+            alert("⚠️ 錯誤：" + msg);
             return false;
         };
     </script>
@@ -18,62 +18,78 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     
     <style>
-        /* 基礎樣式 */
+        /* 全域設定 */
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
             margin: 0; padding: 0;
-            /* 還原原本的漸層背景 */
             background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
-            background-attachment: fixed; /* 背景固定，不隨捲動跑掉 */
+            background-attachment: fixed;
             color: #334155;
             min-height: 100vh;
             -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none; /* 防止下拉重整 */
         }
         
-        /* 歡迎頁強制樣式 (全螢幕圖片) */
+        /* 歡迎頁全螢幕 */
         #welcome-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #4c1d95;
             background-size: cover; background-position: center;
             z-index: 9999;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
             padding-bottom: 80px;
         }
 
-        /* 統一的毛玻璃卡片樣式 (取代原本醜醜的白框) */
+        /* 毛玻璃卡片 (Glassmorphism) */
         .glass-card {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
         /* 底部導航 */
         .glass-nav { 
-            background: rgba(255, 255, 255, 0.85); 
-            backdrop-filter: blur(12px); 
+            background: rgba(255, 255, 255, 0.9); 
+            backdrop-filter: blur(10px); 
             border-top: 1px solid rgba(255,255,255,0.5); 
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* Vue 動畫 */
-        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
-        .fade-enter-from, .fade-leave-to { opacity: 0; }
-        
-        /* 隱藏 Scrollbar 但保留功能 */
+        /* 隱藏 Scrollbar */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 90px); }
+        /* 翻譯放大 Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 10000;
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column;
+        }
+
+        /* 懸浮相機按鈕 */
+        .camera-float-btn {
+            position: fixed; bottom: 100px; right: 20px;
+            width: 56px; height: 56px;
+            background: #2563eb; color: white;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            z-index: 90;
+            font-size: 24px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="app" class="min-h-screen relative">
+    <div id="app" class="min-h-screen relative flex flex-col">
         
         <div id="welcome-layer" v-if="showWelcomePage" :style="{ backgroundImage: `url('./welcome.jpg')` }">
-            <div class="bg-black/30 absolute inset-0"></div> <div class="relative z-10 w-full px-8 text-center">
+            <div class="bg-black/40 absolute inset-0"></div>
+            
+            <div class="relative z-10 w-full px-8 text-center pb-10">
                 <h1 class="text-4xl font-bold text-white mb-2 tracking-widest drop-shadow-lg">BUSAN 2026</h1>
                 <p class="text-white/80 text-sm tracking-widest mb-10">HAPPY TRIP WITH DUCK & WEN</p>
                 
@@ -81,108 +97,129 @@
                     進入旅程
                 </button>
 
-                <div class="bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                <div class="bg-black/50 backdrop-blur-md p-4 rounded-2xl border border-white/10">
                     <div class="flex gap-2">
-                        <input v-model="importCode" placeholder="在此貼上行程代碼..." class="flex-1 bg-white/10 border border-white/30 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-300 outline-none">
+                        <input v-model="importCode" placeholder="貼上行程代碼..." class="flex-1 bg-white/10 border border-white/30 rounded-lg px-3 py-2 text-sm text-white outline-none">
                         <button @click="processImport" class="bg-purple-500 text-white px-4 rounded-lg text-sm font-bold">匯入</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div v-else class="max-w-md mx-auto min-h-screen flex flex-col pb-safe">
+        <div v-else class="flex-1 flex flex-col max-w-md mx-auto w-full pb-24 overflow-x-hidden">
             
-            <div class="flex justify-end pt-4 px-4">
-                <button @click="exportData" class="glass-card px-3 py-1.5 text-white/90 text-xs font-bold flex items-center gap-1 hover:bg-white/40 transition">
+            <div class="absolute top-4 right-4 z-20">
+                <button @click="exportData" class="glass-card px-3 py-1.5 text-slate-700 text-xs font-bold flex items-center gap-1 bg-white/60">
                     <i class="ri-save-3-line"></i> 存檔/匯出
                 </button>
             </div>
 
-            <div v-if="currentTab === 'home'" class="flex-1 px-5 pt-2 flex flex-col gap-6">
+            <div v-if="currentTab === 'home'" class="flex-1 flex flex-col justify-center px-6 space-y-6 min-h-[85vh]">
                 
-                <div class="text-center text-white mt-4">
-                    <div class="inline-block bg-white/20 backdrop-blur px-3 py-1 rounded-full text-xs font-bold mb-2 border border-white/30">
+                <form action="https://www.google.com/search" target="_blank" class="w-full relative">
+                    <i class="ri-google-fill absolute left-3 top-2.5 text-slate-400 text-lg"></i>
+                    <input type="text" name="q" placeholder="搜尋釜山景點..." class="w-full pl-10 pr-4 py-3 rounded-full bg-white/80 border-none shadow-sm text-sm outline-none focus:ring-2 focus:ring-purple-300">
+                </form>
+
+                <div class="text-center">
+                    <div class="inline-block bg-white/30 px-3 py-1 rounded-full text-xs font-bold text-slate-700 mb-2 border border-white/40">
                         2026.11.13 - 11.17
                     </div>
-                    <h1 class="text-3xl font-bold drop-shadow-md mb-6">釜山慶州<br>慢活之旅 🇰🇷</h1>
+                    <h1 class="text-4xl font-bold text-slate-800 drop-shadow-sm mb-6 leading-tight">釜山慶州<br>慢活之旅 🇰🇷</h1>
                     
                     <div class="flex justify-center gap-4">
-                        <div class="glass-card p-4 w-28 flex flex-col items-center justify-center">
-                            <span class="text-2xl font-bold font-mono">{{ daysLeft }}</span>
-                            <span class="text-[10px] uppercase opacity-80">Days Left</span>
+                        <div class="glass-card p-4 w-32 flex flex-col items-center justify-center bg-white/40">
+                            <span class="text-3xl font-bold font-mono text-purple-700">{{ daysLeft }}</span>
+                            <span class="text-[10px] uppercase text-slate-500 font-bold">Days Left</span>
                         </div>
-                        <div class="glass-card p-4 w-28 flex flex-col items-center justify-center">
-                            <i class="ri-sun-cloudy-line text-2xl mb-1"></i>
-                            <span class="text-[10px] uppercase opacity-80">12°C 晴時多雲</span>
+                        <div class="glass-card p-4 w-32 flex flex-col items-center justify-center bg-white/40">
+                            <div class="flex items-center gap-1">
+                                <i class="ri-sun-cloudy-line text-2xl text-orange-400"></i>
+                                <span class="text-xl font-bold text-slate-700">12°</span>
+                            </div>
+                            <span class="text-[10px] uppercase text-slate-500 font-bold">釜山天氣</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-card p-5 text-slate-800">
-                    <h3 class="font-bold mb-2 flex items-center gap-2"><i class="ri-t-shirt-2-line text-purple-600"></i> 建議穿搭</h3>
-                    <p class="text-sm leading-relaxed opacity-80">
-                        早晚溫差大 (8-16°C)。<br>
-                        推薦：發熱衣 + 薄長袖 + 防風大衣。
-                    </p>
-                </div>
-
-                <div class="glass-card p-5">
+                <div class="glass-card p-5 bg-white/50">
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-bold text-slate-800"><i class="ri-list-check text-purple-600"></i> 待辦清單</h3>
-                        <span class="text-xs bg-white/50 px-2 py-1 rounded-full text-purple-700 font-bold">{{ prepList.filter(i=>!i.done).length }} 待辦</span>
+                        <h3 class="font-bold text-slate-800"><i class="ri-checkbox-multiple-line text-purple-600"></i> 待辦事項</h3>
+                        <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-bold">{{ prepList.filter(i=>!i.done).length }} 待完成</span>
                     </div>
-                    <div class="space-y-2">
-                        <div v-for="(item, idx) in prepList" :key="idx" @click="item.done = !item.done" class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/30 cursor-pointer transition">
+                    <div class="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                        <div v-for="(item, idx) in prepList" :key="idx" @click="item.done = !item.done" class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition">
                             <i :class="item.done ? 'ri-checkbox-circle-fill text-green-500' : 'ri-checkbox-blank-circle-line text-slate-400'" class="text-xl"></i>
                             <span :class="item.done ? 'line-through text-slate-400' : 'text-slate-800'">{{ item.text }}</span>
-                            <button @click.stop="deletePrep(idx)" class="ml-auto text-slate-400 hover:text-red-500"><i class="ri-close-line"></i></button>
+                            <button @click.stop="deletePrep(idx)" class="ml-auto text-slate-300 hover:text-red-500"><i class="ri-close-line"></i></button>
                         </div>
                     </div>
-                    <div class="mt-3 flex gap-2">
-                        <input v-model="newPrepItem" placeholder="新增事項..." class="flex-1 bg-white/40 border-none rounded-lg px-3 py-2 text-sm outline-none placeholder-slate-500">
-                        <button @click="addPrep" class="bg-purple-600 text-white w-8 h-8 rounded-lg flex items-center justify-center"><i class="ri-add-line"></i></button>
+                    <div class="flex gap-2">
+                        <input v-model="newPrepItem" placeholder="新增待辦..." class="flex-1 bg-white/60 border-none rounded-lg px-3 py-2 text-sm outline-none">
+                        <button @click="addPrep" class="bg-purple-600 text-white w-9 h-9 rounded-lg"><i class="ri-add-line"></i></button>
                     </div>
                 </div>
             </div>
 
-            <div v-if="currentTab === 'schedule'" class="flex-1 px-4 pt-4">
-                <div class="flex overflow-x-auto space-x-3 pb-4 hide-scrollbar">
+            <div v-if="currentTab === 'schedule'" class="flex-1 px-4 pt-16">
+                <div class="flex overflow-x-auto space-x-3 pb-4 hide-scrollbar mb-2">
                     <button v-for="(day, index) in itinerary" :key="index" @click="activeDayIndex = index"
-                        :class="`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all shadow-sm ${activeDayIndex === index ? 'bg-purple-600 text-white' : 'glass-card text-slate-600'}`">
+                        :class="`flex-shrink-0 px-5 py-2 rounded-full text-sm font-bold shadow-sm transition-all ${activeDayIndex === index ? 'bg-purple-600 text-white' : 'glass-card text-slate-600 bg-white/60'}`">
                         Day {{ day.day }}
                     </button>
                 </div>
                 
-                <div class="glass-card p-6 min-h-[50vh]">
-                    <div class="flex justify-between items-end mb-6 border-b border-slate-200/50 pb-4">
+                <div class="glass-card p-5 bg-white/70 min-h-[60vh]">
+                    <div class="flex justify-between items-end mb-6 border-b border-slate-200 pb-3">
                         <div>
                             <h2 class="text-2xl font-bold text-slate-800">{{ itinerary[activeDayIndex].title }}</h2>
-                            <p class="text-sm text-purple-700 font-bold mt-1">{{ itinerary[activeDayIndex].date }}</p>
+                            <p class="text-sm text-purple-600 font-bold mt-1">{{ itinerary[activeDayIndex].date }}</p>
                         </div>
-                        <i v-if="itinerary[activeDayIndex].title.includes('慶州')" class="ri-ancient-gate-fill text-3xl text-slate-300"></i>
+                        <button @click="addEventModal = true" class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1">
+                            <i class="ri-add-line"></i> 新增行程
+                        </button>
                     </div>
 
-                    <div class="space-y-6 relative pl-4 border-l-2 border-slate-300/50 ml-1">
-                        <div v-for="(event, idx) in itinerary[activeDayIndex].events" :key="idx" class="relative">
-                            <div class="absolute -left-[21px] top-1.5 w-3 h-3 rounded-full bg-purple-400 ring-4 ring-white/30"></div>
-                            <div class="pl-3">
-                                <span class="text-xs font-mono font-bold text-slate-500 mb-1 block">{{ event.time }}</span>
-                                <h4 class="font-bold text-slate-800 text-lg">{{ event.title }}</h4>
-                                <p class="text-sm text-slate-600 mb-2">{{ event.desc }}</p>
-                                <button v-if="event.mapQuery" @click="openMap(event.mapQuery)" class="bg-white/50 text-slate-700 text-xs px-2 py-1 rounded border border-slate-200 hover:bg-white">
-                                    <i class="ri-map-pin-line"></i> 地圖
+                    <div class="space-y-4">
+                        <div v-for="(event, idx) in itinerary[activeDayIndex].events" :key="idx" class="relative pl-4 border-l-2 border-slate-300 group">
+                            <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-purple-500 border-2 border-white"></div>
+                            
+                            <div v-if="!event.isEditing">
+                                <div class="flex justify-between items-start">
+                                    <span class="text-xs font-mono font-bold text-slate-500 bg-slate-100 px-1.5 rounded">{{ event.time }}</span>
+                                    <div class="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                        <button @click="moveEvent(idx, -1)" :disabled="idx===0" class="text-slate-400 hover:text-blue-500 disabled:opacity-30"><i class="ri-arrow-up-s-line"></i></button>
+                                        <button @click="moveEvent(idx, 1)" :disabled="idx===itinerary[activeDayIndex].events.length-1" class="text-slate-400 hover:text-blue-500 disabled:opacity-30"><i class="ri-arrow-down-s-line"></i></button>
+                                        <button @click="event.isEditing = true" class="text-slate-400 hover:text-orange-500 ml-1"><i class="ri-edit-line"></i></button>
+                                        <button @click="deleteEvent(idx)" class="text-slate-400 hover:text-red-500 ml-1"><i class="ri-delete-bin-line"></i></button>
+                                    </div>
+                                </div>
+                                <h4 class="font-bold text-slate-800 text-lg mt-1">{{ event.title }}</h4>
+                                <p class="text-sm text-slate-600 leading-relaxed">{{ event.desc }}</p>
+                                <button v-if="event.mapQuery" @click="openMap(event.mapQuery)" class="mt-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded border border-green-200 flex items-center gap-1 w-fit">
+                                    <i class="ri-map-pin-fill"></i> 地圖導航
                                 </button>
+                            </div>
+
+                            <div v-else class="bg-white p-3 rounded-lg shadow-sm border border-purple-200">
+                                <div class="grid grid-cols-4 gap-2 mb-2">
+                                    <input v-model="event.time" class="col-span-1 p-1 text-sm border rounded bg-gray-50" placeholder="時間">
+                                    <input v-model="event.title" class="col-span-3 p-1 text-sm border rounded bg-gray-50" placeholder="標題">
+                                </div>
+                                <textarea v-model="event.desc" class="w-full p-1 text-sm border rounded bg-gray-50 mb-2" rows="2" placeholder="備註"></textarea>
+                                <input v-model="event.mapQuery" class="w-full p-1 text-sm border rounded bg-gray-50 mb-2" placeholder="地圖關鍵字">
+                                <button @click="event.isEditing = false" class="w-full bg-purple-600 text-white text-xs py-1.5 rounded font-bold">完成</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div v-if="currentTab === 'joy'" class="flex-1 px-5 pt-4 pb-20">
-                <div class="glass-card p-4 mb-6 sticky top-2 z-20 flex justify-around">
+            <div v-if="currentTab === 'joy'" class="flex-1 px-5 pt-16 pb-20">
+                <div class="glass-card p-3 mb-6 sticky top-4 z-20 flex justify-around bg-white/80">
                     <button v-for="cat in joyCategories" :key="cat.id" @click="activeJoyCat = cat.id"
                         :class="`flex flex-col items-center gap-1 text-xs font-bold transition-colors ${activeJoyCat === cat.id ? 'text-purple-700' : 'text-slate-400'}`">
-                        <div :class="`w-10 h-10 rounded-full flex items-center justify-center text-lg ${activeJoyCat === cat.id ? 'bg-purple-100' : 'bg-slate-100/50'}`">
+                        <div :class="`w-10 h-10 rounded-full flex items-center justify-center text-lg ${activeJoyCat === cat.id ? 'bg-purple-100 shadow-inner' : 'bg-slate-100'}`">
                             <i :class="cat.icon"></i>
                         </div>
                         {{ cat.name }}
@@ -190,122 +227,171 @@
                 </div>
 
                 <div class="space-y-4">
-                    <div v-for="shop in joyData[activeJoyCat]" :key="shop.name" class="glass-card p-4 flex justify-between items-center">
-                        <div>
-                            <div class="flex items-center gap-2">
+                    <div v-for="shop in joyData[activeJoyCat]" :key="shop.name" class="glass-card p-4 flex justify-between items-center bg-white/60">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
                                 <h3 class="font-bold text-slate-800">{{ shop.name }}</h3>
-                                <span v-if="shop.must" class="text-[10px] bg-red-400 text-white px-1.5 rounded-sm">必去</span>
+                                <span v-if="shop.must" class="text-[10px] bg-red-500 text-white px-1.5 rounded font-bold">必吃</span>
                             </div>
                             <p class="text-xs text-slate-600 mt-1">{{ shop.desc }}</p>
                         </div>
-                        <button @click="openMap(shop.query)" class="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition">
-                            <i class="ri-navigation-fill"></i>
+                        <button @click="openMap(shop.query)" class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center shadow hover:bg-green-600 ml-2 flex-shrink-0">
+                            <i class="ri-direction-fill text-xl"></i>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div v-if="currentTab === 'budget'" class="flex-1 px-5 pt-4 pb-24">
+            <div v-if="currentTab === 'budget'" class="flex-1 px-5 pt-16 pb-24">
                 
                 <div class="bg-slate-800 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden mb-6">
+                    <i class="ri-money-cny-circle-line absolute -bottom-4 -right-4 text-9xl text-white/5 rotate-12"></i>
+                    
                     <div class="relative z-10">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-xs text-slate-400 bg-slate-700 px-2 py-1 rounded">公帳總覽</span>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] text-slate-400">匯率</span>
-                                <input type="number" step="0.001" v-model="exchangeRate" class="w-12 bg-transparent text-right text-xs text-yellow-400 font-mono border-b border-slate-600 outline-none">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-xs font-bold text-slate-400 bg-slate-700 px-2 py-1 rounded">公帳總覽</span>
+                            
+                            <div class="text-right">
+                                <div class="flex items-center justify-end gap-1 mb-1">
+                                    <span class="text-[10px] text-slate-400">即時匯率</span>
+                                    <button @click="fetchRate" class="text-xs text-blue-400 hover:text-white"><i class="ri-refresh-line"></i></button>
+                                </div>
+                                <div class="flex items-center bg-slate-700 rounded px-2 py-1 border border-slate-600">
+                                    <span class="text-[10px] text-slate-400 mr-1">1 ₩ =</span>
+                                    <input type="number" step="0.0001" v-model="exchangeRate" class="w-14 bg-transparent text-right text-xs text-yellow-300 font-mono outline-none">
+                                    <span class="text-[10px] text-slate-400 ml-1">TWD</span>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="flex items-baseline gap-2">
-                            <h2 class="text-3xl font-bold font-mono">₩{{ publicTotal.toLocaleString() }}</h2>
-                            <span class="text-sm text-slate-400">總計</span>
+                        <div class="flex items-baseline gap-2 mt-2">
+                            <h2 class="text-4xl font-bold font-mono">₩{{ publicTotal.toLocaleString() }}</h2>
                         </div>
                         
-                        <div class="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
+                        <div class="mt-4 pt-4 border-t border-slate-600 flex justify-between items-center">
                             <div class="text-sm text-slate-300">每人應付 (除以2)</div>
-                            <div class="text-xl font-bold text-green-400 font-mono">
-                                ₩{{ Math.round(publicTotal / 2).toLocaleString() }}
-                                <div class="text-[10px] text-slate-500 text-right">≈ TWD {{ Math.round((publicTotal/2)*exchangeRate).toLocaleString() }}</div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-green-400 font-mono">₩{{ Math.round(publicTotal / 2).toLocaleString() }}</div>
+                                <div class="text-[10px] text-slate-500">≈ TWD {{ Math.round((publicTotal/2)*exchangeRate).toLocaleString() }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-card p-5">
-                    <div class="flex bg-white/40 p-1 rounded-xl mb-4">
-                        <button @click="activeBudgetTab = 'public'" :class="`flex-1 py-1.5 rounded-lg text-xs font-bold ${activeBudgetTab==='public'?'bg-slate-800 text-white':'text-slate-600'}`">公帳</button>
-                        <button @click="activeBudgetTab = 'user1'" :class="`flex-1 py-1.5 rounded-lg text-xs font-bold ${activeBudgetTab==='user1'?'bg-slate-800 text-white':'text-slate-600'}`">{{ user1Name }}</button>
-                        <button @click="activeBudgetTab = 'user2'" :class="`flex-1 py-1.5 rounded-lg text-xs font-bold ${activeBudgetTab==='user2'?'bg-slate-800 text-white':'text-slate-600'}`">{{ user2Name }}</button>
+                <div class="glass-card p-5 bg-white/70">
+                    <div class="flex bg-white/50 p-1 rounded-xl mb-4">
+                        <button @click="activeBudgetTab = 'public'" :class="`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${activeBudgetTab==='public'?'bg-slate-800 text-white shadow':'text-slate-500'}`">公帳</button>
+                        <button @click="activeBudgetTab = 'user1'" :class="`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${activeBudgetTab==='user1'?'bg-slate-800 text-white shadow':'text-slate-500'}`">{{ user1Name }}</button>
+                        <button @click="activeBudgetTab = 'user2'" :class="`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${activeBudgetTab==='user2'?'bg-slate-800 text-white shadow':'text-slate-500'}`">{{ user2Name }}</button>
                     </div>
 
                     <div v-if="activeBudgetTab !== 'public'" class="mb-3 text-right">
-                        <input v-if="activeBudgetTab === 'user1'" v-model="user1Name" class="text-xs bg-transparent border-b border-slate-400 w-16 text-center focus:outline-none" placeholder="名字">
-                        <input v-if="activeBudgetTab === 'user2'" v-model="user2Name" class="text-xs bg-transparent border-b border-slate-400 w-16 text-center focus:outline-none" placeholder="名字">
+                        <label class="text-xs text-slate-400 mr-2">編輯名稱:</label>
+                        <input v-if="activeBudgetTab === 'user1'" v-model="user1Name" class="text-xs bg-transparent border-b border-slate-400 w-20 text-center focus:outline-none text-slate-800 font-bold">
+                        <input v-if="activeBudgetTab === 'user2'" v-model="user2Name" class="text-xs bg-transparent border-b border-slate-400 w-20 text-center focus:outline-none text-slate-800 font-bold">
                     </div>
 
                     <div class="flex gap-2 mb-4">
-                        <input v-model="newItemName" placeholder="品項" class="flex-1 bg-white/50 border-none rounded-lg px-3 py-2 text-sm outline-none">
-                        <input v-model="newItemPrice" type="number" placeholder="₩" class="w-20 bg-white/50 border-none rounded-lg px-3 py-2 text-sm outline-none font-mono">
-                        <button @click="addItem" class="bg-slate-800 text-white w-10 rounded-lg"><i class="ri-add-line"></i></button>
+                        <input v-model="newItemName" placeholder="品項 (如: 烤肉)" class="flex-1 bg-white border-none rounded-lg px-3 py-2 text-sm outline-none shadow-sm">
+                        <input v-model="newItemPrice" type="number" placeholder="₩ 金額" class="w-24 bg-white border-none rounded-lg px-3 py-2 text-sm outline-none font-mono shadow-sm">
+                        <button @click="addItem" class="bg-slate-800 text-white w-10 rounded-lg flex items-center justify-center shadow-sm hover:bg-slate-700"><i class="ri-add-line"></i></button>
                     </div>
 
-                    <div class="space-y-2 max-h-60 overflow-y-auto">
-                        <div v-for="(item, idx) in currentBudgetList" :key="idx" class="flex justify-between items-center p-2 border-b border-slate-200/50 last:border-0">
-                            <span class="text-sm text-slate-700">{{ item.name }}</span>
+                    <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        <div v-for="(item, idx) in currentBudgetList" :key="idx" class="flex justify-between items-center p-3 bg-white/40 rounded-lg border border-white/60">
+                            <span class="text-sm text-slate-700 font-medium">{{ item.name }}</span>
                             <div class="flex items-center gap-3">
                                 <span class="text-sm font-mono font-bold text-slate-800">₩{{ parseInt(item.price).toLocaleString() }}</span>
-                                <button @click="deleteItem(idx)" class="text-gray-400 hover:text-red-500"><i class="ri-delete-bin-line"></i></button>
+                                <button @click="deleteItem(idx)" class="text-slate-400 hover:text-red-500"><i class="ri-close-circle-line text-lg"></i></button>
                             </div>
                         </div>
+                        <div v-if="currentBudgetList.length === 0" class="text-center text-xs text-slate-400 py-4">尚無紀錄</div>
                     </div>
                 </div>
             </div>
 
-            <div v-if="currentTab === 'info'" class="flex-1 px-5 pt-4 pb-24 space-y-4">
+            <div v-if="currentTab === 'info'" class="flex-1 px-5 pt-16 pb-24 space-y-4">
                 
-                <div class="grid grid-cols-3 gap-3">
-                    <a href="tel:112" class="glass-card p-3 flex flex-col items-center text-red-600 hover:bg-red-50">
-                        <i class="ri-alarm-warning-fill text-xl mb-1"></i><span class="text-xs font-bold">警察 112</span>
-                    </a>
-                    <a href="tel:119" class="glass-card p-3 flex flex-col items-center text-red-600 hover:bg-red-50">
-                        <i class="ri-fire-fill text-xl mb-1"></i><span class="text-xs font-bold">火警 119</span>
-                    </a>
-                    <a href="https://overseas.mofa.go.kr/kr-busan-zh/index.do" target="_blank" class="glass-card p-3 flex flex-col items-center text-blue-600 hover:bg-blue-50">
-                        <i class="ri-government-fill text-xl mb-1"></i><span class="text-xs font-bold">辦事處</span>
-                    </a>
+                <div class="glass-card p-4 bg-white/70">
+                    <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2"><i class="ri-bus-fill text-blue-500"></i> 交通指南</h3>
+                    <div class="text-xs text-slate-600 space-y-2">
+                        <p>🚕 <span class="font-bold text-slate-800">計程車 (Kakao T)</span>: 起跳價約 4,800₩。請直接用 App 叫車，並選擇「自動付款」避免爭議。</p>
+                        <p>🚇 <span class="font-bold text-slate-800">地鐵/公車</span>: 上下車都要刷 WOWPASS/T-Money。</p>
+                        <p>🚆 <span class="font-bold text-slate-800">前往慶州</span>: 建議從釜山站搭 KTX (約30分) 或 老圃站搭巴士 (約50分)。</p>
+                    </div>
                 </div>
 
-                <div class="glass-card p-4">
-                    <h3 class="font-bold text-slate-800 mb-3"><i class="ri-translate-2 text-blue-500"></i> 必備翻譯</h3>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div v-for="t in translations" class="bg-white/40 p-2 rounded-lg">
-                            <div class="text-[10px] text-slate-500">{{ t.zh }}</div>
-                            <div class="font-bold text-slate-800">{{ t.kr }}</div>
+                <div class="glass-card p-4 bg-white/70">
+                    <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2"><i class="ri-hotel-bed-fill text-purple-500"></i> 住宿資訊</h3>
+                    <div class="space-y-3">
+                        <div class="border-b border-slate-200 pb-2 last:border-0 last:pb-0">
+                            <div class="flex justify-between">
+                                <span class="font-bold text-sm text-slate-700">阿班飯店 (Arban Hotel)</span>
+                                <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-500">西面</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">交通最方便，樓下就是商圈。</p>
+                            <button @click="openMap('Arban Hotel Busan')" class="text-xs text-blue-500 font-bold mt-1"><i class="ri-map-pin-line"></i> 導航</button>
+                        </div>
+                        <div>
+                            <div class="flex justify-between">
+                                <span class="font-bold text-sm text-slate-700">Lavalse Hotel</span>
+                                <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-500">影島</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">絕美海景與大橋景觀。</p>
+                            <button @click="openMap('Lavalse Hotel Busan')" class="text-xs text-blue-500 font-bold mt-1"><i class="ri-map-pin-line"></i> 導航</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-card p-4">
+                <div class="glass-card p-4 bg-white/70">
+                    <h3 class="font-bold text-slate-800 mb-3"><i class="ri-translate-2 text-green-600"></i> 必備翻譯</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div v-for="(t, i) in translations" :key="i" class="bg-white p-2 rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition">
+                            <div class="flex justify-between items-start">
+                                <span class="text-[10px] text-slate-400">{{ t.zh }}</span>
+                                <div class="flex gap-1">
+                                    <button @click="speak(t.kr)" class="text-slate-400 hover:text-blue-500"><i class="ri-volume-up-fill"></i></button>
+                                    <button @click="enlargeText(t.kr)" class="text-slate-400 hover:text-purple-500"><i class="ri-fullscreen-fill"></i></button>
+                                </div>
+                            </div>
+                            <div class="font-bold text-slate-800 text-sm mt-1">{{ t.kr }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-4 bg-white/70">
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-bold text-slate-800"><i class="ri-suitcase-line text-orange-500"></i> 行李</h3>
-                        <div class="flex bg-white/40 rounded-lg p-0.5">
-                            <button @click="activeChecklistTab='user1'" :class="`px-3 py-0.5 text-xs rounded-md ${activeChecklistTab==='user1'?'bg-white shadow text-slate-800':'text-slate-500'}`">{{ user1Name }}</button>
-                            <button @click="activeChecklistTab='user2'" :class="`px-3 py-0.5 text-xs rounded-md ${activeChecklistTab==='user2'?'bg-white shadow text-slate-800':'text-slate-500'}`">{{ user2Name }}</button>
+                        <h3 class="font-bold text-slate-800"><i class="ri-suitcase-line text-orange-500"></i> 行李清單</h3>
+                        <div class="flex bg-slate-100 rounded-lg p-0.5">
+                            <button @click="activeChecklistTab='user1'" :class="`px-3 py-0.5 text-xs rounded-md transition-all ${activeChecklistTab==='user1'?'bg-white shadow text-slate-800 font-bold':'text-slate-400'}`">{{ user1Name }}</button>
+                            <button @click="activeChecklistTab='user2'" :class="`px-3 py-0.5 text-xs rounded-md transition-all ${activeChecklistTab==='user2'?'bg-white shadow text-slate-800 font-bold':'text-slate-400'}`">{{ user2Name }}</button>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div v-for="(item, idx) in currentChecklist" :key="idx" @click="toggleCheck(idx)" class="flex items-center gap-2 p-1 cursor-pointer">
-                            <i :class="item.done ? 'ri-checkbox-circle-fill text-orange-500' : 'ri-checkbox-blank-circle-line text-slate-300'"></i>
-                            <span :class="`text-sm ${item.done ? 'text-slate-400 line-through' : 'text-slate-700'}`">{{ item.text }}</span>
+                    
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div v-for="(item, idx) in currentChecklist" :key="idx" class="flex items-center gap-2 p-2 bg-white/50 rounded hover:bg-white cursor-pointer group">
+                            <div @click="toggleCheck(idx)" class="flex items-center gap-2 flex-1">
+                                <i :class="item.done ? 'ri-checkbox-circle-fill text-orange-500' : 'ri-checkbox-blank-circle-line text-slate-300'"></i>
+                                <span :class="`text-xs ${item.done ? 'text-slate-400 line-through' : 'text-slate-700'}`">{{ item.text }}</span>
+                            </div>
+                            <button @click="deleteCheckItem(idx)" class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="ri-close-line"></i></button>
                         </div>
+                    </div>
+                    
+                    <div class="flex gap-2 border-t border-slate-200 pt-2">
+                        <input v-model="newCheckItem" placeholder="新增物品..." class="flex-1 bg-white text-xs px-2 py-1.5 rounded border-none outline-none">
+                        <button @click="addCheckItem" class="bg-orange-500 text-white px-3 py-1 rounded text-xs"><i class="ri-add-line"></i></button>
                     </div>
                 </div>
             </div>
 
         </div>
 
-        <nav v-show="!showWelcomePage" class="fixed bottom-0 left-0 right-0 glass-nav z-50 pb-[env(safe-area-inset-bottom)]">
+        <a href="https://lens.google.com/" target="_blank" v-if="currentTab === 'info'" class="camera-float-btn hover:scale-110 transition-transform">
+            <i class="ri-camera-lens-line"></i>
+        </a>
+
+        <nav v-show="!showWelcomePage" class="fixed bottom-0 left-0 right-0 glass-nav z-50">
             <div class="grid grid-cols-5 h-16 max-w-md mx-auto items-center">
                 <button @click="currentTab='home'" :class="`flex flex-col items-center ${currentTab==='home'?'text-purple-600':'text-slate-400'}`">
                     <i class="ri-home-smile-2-fill text-xl"></i><span class="text-[10px] mt-0.5">首頁</span>
@@ -313,8 +399,8 @@
                 <button @click="currentTab='schedule'" :class="`flex flex-col items-center ${currentTab==='schedule'?'text-purple-600':'text-slate-400'}`">
                     <i class="ri-calendar-todo-fill text-xl"></i><span class="text-[10px] mt-0.5">行程</span>
                 </button>
-                <button @click="currentTab='joy'" class="relative -top-4">
-                    <div :class="`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transform transition-all ${currentTab==='joy' ? 'bg-gradient-to-tr from-purple-500 to-pink-500 text-white scale-110' : 'bg-white text-purple-300'}`">
+                <button @click="currentTab='joy'" class="relative -top-5">
+                    <div :class="`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transform transition-all ${currentTab==='joy' ? 'bg-gradient-to-tr from-purple-500 to-pink-500 text-white scale-110' : 'bg-white text-purple-300 border border-slate-100'}`">
                         <i class="ri-emotion-happy-line text-3xl"></i>
                     </div>
                 </button>
@@ -327,6 +413,27 @@
             </div>
         </nav>
 
+        <div v-if="enlargeModal.show" class="modal-overlay" @click="enlargeModal.show = false">
+            <div class="bg-white p-8 rounded-2xl w-[90%] text-center" @click.stop>
+                <p class="text-4xl font-bold text-slate-800 mb-6 leading-relaxed">{{ enlargeModal.text }}</p>
+                <button @click="enlargeModal.show = false" class="bg-slate-800 text-white px-6 py-2 rounded-full font-bold">關閉</button>
+            </div>
+        </div>
+
+        <div v-if="addEventModal" class="modal-overlay" @click="addEventModal = false">
+            <div class="bg-white p-6 rounded-2xl w-[85%] max-w-sm" @click.stop>
+                <h3 class="font-bold text-lg mb-4 text-slate-800">新增行程至 Day {{ itinerary[activeDayIndex].day }}</h3>
+                <input v-model="newEvent.time" placeholder="時間 (如 14:00)" class="w-full mb-3 p-2 bg-gray-50 border rounded text-sm">
+                <input v-model="newEvent.title" placeholder="標題" class="w-full mb-3 p-2 bg-gray-50 border rounded text-sm">
+                <textarea v-model="newEvent.desc" placeholder="備註" class="w-full mb-3 p-2 bg-gray-50 border rounded text-sm" rows="2"></textarea>
+                <input v-model="newEvent.mapQuery" placeholder="地圖關鍵字 (Naver Map)" class="w-full mb-4 p-2 bg-gray-50 border rounded text-sm">
+                <div class="flex gap-2">
+                    <button @click="addEventModal = false" class="flex-1 bg-gray-200 text-slate-600 py-2 rounded font-bold">取消</button>
+                    <button @click="addEvent" class="flex-1 bg-purple-600 text-white py-2 rounded font-bold">新增</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -338,6 +445,8 @@
                 const showWelcomePage = ref(true);
                 const currentTab = ref('home');
                 const importCode = ref('');
+                const addEventModal = ref(false);
+                const enlargeModal = ref({ show:false, text:'' });
                 
                 // 核心資料
                 const user1Name = ref('鴨');
@@ -345,24 +454,60 @@
                 const exchangeRate = ref(0.024);
                 const daysLeft = ref(0);
 
-                // 待辦
+                // 1. 待辦清單
                 const prepList = ref([
                     {text:'買機票', done:false}, {text:'訂住宿', done:false}, 
-                    {text:'膠囊列車預約', done:false}, {text:'ESIM/網卡', done:false}
+                    {text:'膠囊列車預約', done:false}, {text:'購買 ESIM', done:false}
                 ]);
                 const newPrepItem = ref('');
 
-                // 行程資料
+                // 2. 行程資料
                 const activeDayIndex = ref(0);
+                const newEvent = ref({ time:'', title:'', desc:'', mapQuery:'' });
                 const itinerary = ref([
-                    {day:1, date:"11/13(五)", title:"抵達釜山", events:[{time:"14:30", title:"金海機場", desc:"領錢/搭車", mapQuery:"Gimhae Airport"}, {time:"18:00", title:"西面晚餐", desc:"味贊王鹽烤肉", mapQuery:"Matchandeul Wang Sogeum Gui Seomyeon"}, {time:"20:00", title:"Olive Young", desc:"西面旗艦店", mapQuery:"Olive Young Seomyeon"}]},
-                    {day:2, date:"11/14(六)", title:"海雲台&煙火", events:[{time:"11:30", title:"膠囊列車", desc:"尾浦 -> 青沙浦", mapQuery:"Mipo Station"}, {time:"12:30", title:"青沙浦午餐", desc:"秀敏家炭火烤貝", mapQuery:"Suminene"}, {time:"19:00", title:"國際煙火節", desc:"廣安里沙灘/飯店", mapQuery:"Gwangalli Beach"}]},
-                    {day:3, date:"11/15(日)", title:"慶州古城", events:[{time:"11:30", title:"韓服體驗", desc:"大陵苑 Dorandoran", mapQuery:"Gyeongju Daereungwon"}, {time:"13:30", title:"皇理團路", desc:"韓屋咖啡廳", mapQuery:"Hwangnidan-gil"}, {time:"18:00", title:"東宮與月池", desc:"夜景散步", mapQuery:"Donggung Palace and Wolji Pond"}]},
-                    {day:4, date:"11/16(一)", title:"甘川與購物", events:[{time:"10:30", title:"甘川洞文化村", desc:"小王子拍照", mapQuery:"Gamcheon Culture Village"}, {time:"15:00", title:"樂天超市", desc:"南浦洞買伴手禮", mapQuery:"Lotte Mart Gwangbok"}]},
-                    {day:5, date:"11/17(二)", title:"快樂返家", events:[{time:"11:00", title:"前往機場", desc:"免稅店補貨", mapQuery:"Gimhae Airport"}]}
+                    {
+                        day:1, date:"11/13(五)", title:"抵達釜山", 
+                        events:[
+                            {time:"14:30", title:"抵達金海機場", desc:"領錢 / 搭計程車", mapQuery:"Gimhae Airport", isEditing:false}, 
+                            {time:"18:00", title:"味贊王鹽烤肉", desc:"西面店，必吃3.5cm五花肉", mapQuery:"Matchandeul Wang Sogeum Gui Seomyeon", isEditing:false},
+                            {time:"20:00", title:"Olive Young", desc:"西面旗艦店大採購", mapQuery:"Olive Young Seomyeon", isEditing:false}
+                        ]
+                    },
+                    {
+                        day:2, date:"11/14(六)", title:"海雲台&煙火", 
+                        events:[
+                            {time:"11:30", title:"膠囊列車", desc:"尾浦 -> 青沙浦 (記得預約)", mapQuery:"Mipo Station", isEditing:false}, 
+                            {time:"12:30", title:"青沙浦午餐", desc:"秀敏家炭火烤貝 或 網美咖啡", mapQuery:"Suminene", isEditing:false}, 
+                            {time:"15:00", title:"海雲台市場", desc:"吃糖餅、盲鰻", mapQuery:"Haeundae Market", isEditing:false},
+                            {time:"19:00", title:"釜山國際煙火節", desc:"廣安里海水浴場 (或飯店觀看)", mapQuery:"Gwangalli Beach", isEditing:false}
+                        ]
+                    },
+                    {
+                        day:3, date:"11/15(日)", title:"慶州古城", 
+                        events:[
+                            {time:"11:00", title:"大陵苑", desc:"參觀天馬塚，散步拍照", mapQuery:"Daereungwon", isEditing:false},
+                            {time:"12:30", title:"穿韓服", desc:"推薦 Dorandoran，在韓屋牆拍照", mapQuery:"Gyeongju Hanbok", isEditing:false},
+                            {time:"14:00", title:"皇理團路", desc:"文青小店、咖啡廳巡禮", mapQuery:"Hwangnidan-gil", isEditing:false},
+                            {time:"18:00", title:"東宮與月池", desc:"必看絕美夜景", mapQuery:"Donggung Palace and Wolji Pond", isEditing:false}
+                        ]
+                    },
+                    {
+                        day:4, date:"11/16(一)", title:"甘川與購物", 
+                        events:[
+                            {time:"10:30", title:"甘川洞文化村", desc:"尋找小王子", mapQuery:"Gamcheon Culture Village", isEditing:false}, 
+                            {time:"13:00", title:"BIFF廣場", desc:"吃元祖黑糖餅", mapQuery:"BIFF Square", isEditing:false},
+                            {time:"15:00", title:"樂天超市", desc:"光復店，頂樓有觀景台", mapQuery:"Lotte Mart Gwangbok", isEditing:false}
+                        ]
+                    },
+                    {
+                        day:5, date:"11/17(二)", title:"快樂返家", 
+                        events:[
+                            {time:"11:00", title:"前往機場", desc:"辦理退稅、逛免稅店", mapQuery:"Gimhae Airport", isEditing:false}
+                        ]
+                    }
                 ]);
 
-                // 快樂資料
+                // 3. 快樂 (Joy) - 每類 5 家
                 const activeJoyCat = ref('food');
                 const joyCategories = [
                     {id:'food', name:'美食', icon:'ri-restaurant-2-fill'}, 
@@ -372,25 +517,36 @@
                 ];
                 const joyData = ref({
                     food: [
-                        {name:'味贊王鹽烤肉', desc:'西面｜必吃厚切五花肉', query:'Matchandeul Wang Sogeum Gui', must:true},
-                        {name:'螞蟻家', desc:'南浦｜辣炒章魚牛腸蝦', query:'Gaemijip'},
-                        {name:'Eonyang Bulgogi', desc:'海雲台｜傳統韓式烤牛肉', query:'Eonyang Bulgogi Busan'}
+                        {name:'味贊王鹽烤肉', desc:'西面｜專人代烤厚切豬肉', query:'Matchandeul Wang Sogeum Gui Seomyeon', must:true},
+                        {name:'螞蟻家 (개미집)', desc:'南浦｜辣炒章魚牛腸蝦', query:'Gaemijip Nampo'},
+                        {name:'雙胞胎豬肉湯飯', desc:'大淵｜釜山必吃濃郁湯頭', query:'Ssangdung-i Dwaeji Gukbap'},
+                        {name:'伍班長烤肉', desc:'海雲台｜戶外氣氛佳', query:'Obanjang'},
+                        {name:'密陽血腸豬肉湯飯', desc:'海雲台｜24小時營業', query:'Milyang Sundae Dwaeji Gukbap'}
                     ],
                     cafe: [
-                        {name:'Coralani', desc:'機張｜階梯海景', query:'Coralani', must:true},
-                        {name:'Render', desc:'海雲台｜質感風', query:'Render Cafe'}
+                        {name:'Coralani', desc:'機張｜超美階梯式海景', query:'Coralani', must:true},
+                        {name:'Render', desc:'海雲台｜極簡風質感咖啡', query:'Render Cafe'},
+                        {name:'Huinnyeoul Beach', desc:'影島｜粉紅夕陽海景', query:'Huinnyeoul Beach'},
+                        {name:'Old Mug', desc:'松亭｜森林系木屋氛圍', query:'Old Mug'},
+                        {name:'Momos Coffee', desc:'溫泉場｜世界冠軍咖啡師', query:'Momos Coffee'}
                     ],
                     shop: [
-                        {name:'Olive Young', desc:'西面/南浦｜美妝聖地', query:'Olive Young', must:true},
-                        {name:'Gentle Monster', desc:'新世界百貨', query:'Gentle Monster Busan'}
+                        {name:'Olive Young', desc:'西面/南浦｜美妝保養補貨', query:'Olive Young', must:true},
+                        {name:'Gentle Monster', desc:'新世界百貨｜必買墨鏡', query:'Gentle Monster Busan'},
+                        {name:'樂天百貨光復店', desc:'南浦｜超市+噴泉秀', query:'Lotte Department Store Gwangbok'},
+                        {name:'Tamburins', desc:'新世界百貨｜香氛護手霜', query:'Tamburins Busan'},
+                        {name:'Object', desc:'西面｜文創小物貼紙', query:'Object Seomyeon'}
                     ],
                     snack: [
-                        {name:'元祖黑糖餅', desc:'BIFF廣場', query:'Busan Hotteok'},
-                        {name:'古來思魚糕', desc:'海雲台', query:'Goraesa Fish Cake'}
+                        {name:'元祖黑糖餅', desc:'BIFF廣場｜排隊名店', query:'Busan Hotteok'},
+                        {name:'古來思魚糕', desc:'海雲台｜多口味魚板', query:'Goraesa Fish Cake'},
+                        {name:'李家辣炒年糕', desc:'富平市場｜蘿蔔絲年糕', query:'Igane Tteokbokki'},
+                        {name:'Ops Bakery', desc:'海雲台｜必吃巨大的泡芙', query:'Ops Bakery Haeundae'},
+                        {name:'Egg Drop', desc:'西面｜滑蛋吐司早餐', query:'Egg Drop Seomyeon'}
                     ]
                 });
 
-                // 記帳資料
+                // 4. 記帳
                 const activeBudgetTab = ref('public');
                 const newItemName = ref('');
                 const newItemPrice = ref('');
@@ -398,28 +554,83 @@
                 const user1Expenses = ref([]);
                 const user2Expenses = ref([]);
 
-                // 翻譯
+                // 5. 資訊 (Info)
                 const translations = [
                     {zh:'你好', kr:'안녕하세요'}, {zh:'謝謝', kr:'감사합니다'},
                     {zh:'多少錢?', kr:'얼마예요?'}, {zh:'請給我這個', kr:'이거 주세요'},
-                    {zh:'廁所?', kr:'화장실?'}
+                    {zh:'廁所?', kr:'화장실?'}, {zh:'太貴了', kr:'너무 비싸요'},
+                    {zh:'可以刷卡嗎?', kr:'카드 돼요?'}
                 ];
 
-                // 行李
+                // 6. 行李清單 (可編輯)
                 const activeChecklistTab = ref('user1');
                 const user1Packing = ref([{text:'護照',done:false}, {text:'轉接頭',done:false}, {text:'牙刷',done:false}]);
                 const user2Packing = ref([{text:'護照',done:false}, {text:'離子夾',done:false}, {text:'化妝包',done:false}]);
+                const newCheckItem = ref('');
 
-                // 計算屬性
+                // --- 計算屬性 ---
                 const currentBudgetList = computed(() => {
                     if(activeBudgetTab.value === 'public') return publicExpenses.value;
                     return activeBudgetTab.value === 'user1' ? user1Expenses.value : user2Expenses.value;
                 });
                 
                 const publicTotal = computed(() => publicExpenses.value.reduce((s,i)=>s+Number(i.price),0));
+                
                 const currentChecklist = computed(() => activeChecklistTab.value === 'user1' ? user1Packing.value : user2Packing.value);
 
-                // 存取邏輯
+                // --- 方法 ---
+
+                // 匯率 API
+                const fetchRate = () => {
+                    fetch('https://api.exchangerate-api.com/v4/latest/KRW')
+                        .then(res => res.json())
+                        .then(data => {
+                            exchangeRate.value = data.rates.TWD;
+                            alert("匯率已更新！ 1 KRW = " + data.rates.TWD + " TWD");
+                        })
+                        .catch(() => alert("無法取得匯率，請檢查網路"));
+                };
+
+                // 行程編輯邏輯
+                const moveEvent = (idx, direction) => {
+                    const list = itinerary.value[activeDayIndex.value].events;
+                    const newIdx = idx + direction;
+                    if(newIdx >= 0 && newIdx < list.length) {
+                        [list[idx], list[newIdx]] = [list[newIdx], list[idx]];
+                    }
+                };
+                const deleteEvent = (idx) => {
+                    if(confirm("確定刪除此行程？")) itinerary.value[activeDayIndex.value].events.splice(idx, 1);
+                };
+                const addEvent = () => {
+                    if(newEvent.value.title) {
+                        itinerary.value[activeDayIndex.value].events.push({...newEvent.value, isEditing:false});
+                        newEvent.value = {time:'', title:'', desc:'', mapQuery:''};
+                        addEventModal.value = false;
+                    }
+                };
+
+                // 翻譯功能
+                const speak = (text) => {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'ko-KR';
+                    window.speechSynthesis.speak(utterance);
+                };
+                const enlargeText = (text) => {
+                    enlargeModal.value = { show: true, text: text };
+                };
+
+                // 行李清單功能
+                const addCheckItem = () => {
+                    if(newCheckItem.value) {
+                        currentChecklist.value.push({text:newCheckItem.value, done:false});
+                        newCheckItem.value = '';
+                    }
+                };
+                const deleteCheckItem = (idx) => currentChecklist.value.splice(idx, 1);
+                const toggleCheck = (idx) => currentChecklist.value[idx].done = !currentChecklist.value[idx].done;
+
+                // 存取邏輯 (使用新 Key 確保乾淨)
                 const saveData = () => {
                     const data = {
                         u1: user1Name.value, u2: user2Name.value, rate: exchangeRate.value,
@@ -427,12 +638,12 @@
                         pub: publicExpenses.value, u1e: user1Expenses.value, u2e: user2Expenses.value,
                         u1p: user1Packing.value, u2p: user2Packing.value
                     };
-                    localStorage.setItem('busan_2026_final', JSON.stringify(data));
+                    localStorage.setItem('busan_2026_final_v2', JSON.stringify(data));
                 };
 
                 const loadData = () => {
                     try {
-                        const saved = localStorage.getItem('busan_2026_final');
+                        const saved = localStorage.getItem('busan_2026_final_v2');
                         if(saved) {
                             const d = JSON.parse(saved);
                             if(d.u1) user1Name.value = d.u1;
@@ -445,26 +656,28 @@
                             if(d.u2e) user2Expenses.value = d.u2e;
                             if(d.u1p) user1Packing.value = d.u1p;
                             if(d.u2p) user2Packing.value = d.u2p;
+                        } else {
+                            fetchRate(); // 首次載入抓匯率
                         }
                     } catch(e) {}
                 };
 
-                // 操作功能
+                // CRUD Helper
                 const addPrep = () => { if(newPrepItem.value){ prepList.value.push({text:newPrepItem.value, done:false}); newPrepItem.value=''; }};
                 const deletePrep = (i) => prepList.value.splice(i,1);
                 const addItem = () => { if(newItemName.value && newItemPrice.value){ currentBudgetList.value.push({name:newItemName.value, price:newItemPrice.value}); newItemName.value=''; newItemPrice.value=''; }};
                 const deleteItem = (i) => currentBudgetList.value.splice(i,1);
-                const toggleCheck = (i) => currentChecklist.value[i].done = !currentChecklist.value[i].done;
-                
+
+                // Export/Import
                 const exportData = () => {
                     saveData();
-                    const code = btoa(unescape(encodeURIComponent(JSON.stringify(localStorage.getItem('busan_2026_final')))));
+                    const code = btoa(unescape(encodeURIComponent(JSON.stringify(localStorage.getItem('busan_2026_final_v2')))));
                     navigator.clipboard.writeText(code).then(()=>alert("代碼已複製！"));
                 };
                 const processImport = () => {
                     try {
                         const json = decodeURIComponent(escape(atob(importCode.value)));
-                        localStorage.setItem('busan_2026_final', JSON.parse(json));
+                        localStorage.setItem('busan_2026_final_v2', JSON.parse(json));
                         location.reload();
                     } catch(e){ alert("代碼錯誤"); }
                 };
@@ -482,12 +695,13 @@
 
                 return {
                     showWelcomePage, enterApp, currentTab, importCode, processImport, exportData,
-                    user1Name, user2Name, exchangeRate, daysLeft,
+                    user1Name, user2Name, exchangeRate, daysLeft, fetchRate,
                     prepList, addPrep, deletePrep, newPrepItem,
-                    itinerary, activeDayIndex, openMap,
+                    itinerary, activeDayIndex, openMap, moveEvent, deleteEvent, addEvent, addEventModal, newEvent,
                     joyCategories, activeJoyCat, joyData,
                     activeBudgetTab, newItemName, newItemPrice, addItem, deleteItem, currentBudgetList, publicTotal,
-                    translations, activeChecklistTab, currentChecklist, toggleCheck
+                    translations, activeChecklistTab, currentChecklist, toggleCheck, newCheckItem, addCheckItem, deleteCheckItem,
+                    speak, enlargeText, enlargeModal
                 };
             }
         }).mount('#app');
